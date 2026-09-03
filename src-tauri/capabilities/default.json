@@ -1,0 +1,10 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Default permissions for Limen",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "positioner:default"
+  ]
+}
