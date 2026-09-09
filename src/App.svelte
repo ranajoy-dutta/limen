@@ -38,7 +38,10 @@
   let errorMessage: string | null = $state(null);
   let copyFeedback: boolean = $state(false);
 
+  let isInitialized = false;
+
   $effect(() => {
+    if (!isInitialized) return;
     if (startUrl.trim()) {
       localStorage.setItem('limen_start_url', startUrl.trim());
     }
@@ -78,7 +81,7 @@
         case 'Internal':
           return err.detail || 'An internal error occurred.';
         case 'Aws':
-          return err.detail?.message || 'AWS service error.';
+          return err.detail?.message || err.detail?.code || 'AWS service error.';
         case 'ConfigFile':
           return err.detail?.reason || 'Configuration file error.';
         default:
@@ -228,19 +231,20 @@
       region = savedRegion;
     }
 
-    if (!savedUrl) {
-      try {
-        const lastSession = await invoke<{ start_url: string; region: string } | null>('get_last_session');
-        if (lastSession) {
+    try {
+      const lastSession = await invoke<{ start_url: string; region: string } | null>('get_last_session');
+      if (lastSession) {
+        if (!savedUrl && lastSession.start_url) {
           startUrl = lastSession.start_url;
-          region = lastSession.region;
-          localStorage.setItem('limen_start_url', startUrl);
-          localStorage.setItem('limen_region', region);
         }
-      } catch (e) {
-        console.error('Failed to get last session:', e);
+        if (!savedRegion && lastSession.region) {
+          region = lastSession.region;
+        }
       }
+    } catch (e) {
+      console.error('Failed to get last session:', e);
     }
+    isInitialized = true;
 
     await fetchState();
     if (sessionState.status === 'Active') {
@@ -425,10 +429,32 @@
       </div>
 
     {:else if sessionState.status === 'Registering'}
-      <div class="card" style="text-align: center; padding: 36px 16px;">
-        <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">Registering Client...</div>
-        <div style="font-size: 12px; color: var(--text-muted);">
-          Establishing secure connection with AWS SSO-OIDC portal.
+      <div class="card" style="text-align: center; padding: 28px 16px; display: flex; flex-direction: column; align-items: center; gap: 12px;">
+        <svg class="spinner-icon" viewBox="0 0 24 24" width="22" height="22" style="color: #3b82f6; width: 22px; height: 22px;">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="32" stroke-linecap="round" />
+        </svg>
+        <div>
+          <div style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">Registering Client...</div>
+          <div style="font-size: 12px; color: var(--text-muted);">
+            Establishing secure connection with AWS SSO portal.
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px; width: 100%; margin-top: 8px;">
+          <button
+            class="action-btn-mini"
+            style="flex: 1; height: 30px; justify-content: center;"
+            onclick={handleCancel}
+          >
+            Cancel
+          </button>
+          <button
+            class="action-btn-mini"
+            style="flex: 1; height: 30px; justify-content: center; color: var(--text-muted);"
+            onclick={handleQuit}
+            title="Quit Limen (⌘Q)"
+          >
+            Quit Limen
+          </button>
         </div>
       </div>
 
@@ -792,16 +818,33 @@
       </footer>
 
     {:else if sessionState.status === 'Expired'}
-      <div class="card" style="text-align: center; padding: 24px 16px;">
-        <div style="font-size: 14px; font-weight: 600; color: var(--warning); margin-bottom: 8px;">
+      <div class="card" style="text-align: center; padding: 24px 16px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="font-size: 14px; font-weight: 600; color: var(--warning);">
           Session Expired
         </div>
-        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
-          {sessionState.data.reason}
+        <div style="font-size: 12px; color: var(--text-secondary);">
+          {sessionState.data.reason || 'Your AWS SSO session has expired. Please sign in again.'}
         </div>
-        <button class="primary-btn" onclick={handleLogin}>
-          Sign In Again
+        <button class="primary-btn" onclick={handleLogin} disabled={isLoading}>
+          {isLoading ? 'Signing In...' : 'Sign In Again'}
         </button>
+        <div style="display: flex; gap: 8px; justify-content: center; margin-top: 4px;">
+          <button
+            class="action-btn-mini"
+            style="flex: 1; height: 28px; justify-content: center;"
+            onclick={handleCancel}
+          >
+            Edit SSO Details
+          </button>
+          <button
+            class="action-btn-mini"
+            style="flex: 1; height: 28px; justify-content: center; color: var(--text-muted);"
+            onclick={handleQuit}
+            title="Quit Limen (⌘Q)"
+          >
+            Quit Limen
+          </button>
+        </div>
       </div>
     {/if}
   </main>

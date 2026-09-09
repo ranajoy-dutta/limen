@@ -84,6 +84,18 @@ impl SessionManager {
                         region: tokens.region,
                     };
                     tracing::info!("Restored active session for {}", last.start_url);
+                } else if !tokens.refresh_token.is_empty() {
+                    // Attempt proactive refresh on startup using refresh_token
+                    *self.active_tokens.write().await = Some(tokens.clone());
+                    tracing::info!("Access token expired, attempting refresh using refresh_token...");
+                    if let Ok(()) = self.refresh_active_session().await {
+                        tracing::info!("Successfully restored and refreshed session on launch");
+                        return Ok(());
+                    }
+                    *self.active_tokens.write().await = None;
+                    *self.state.write().await = SessionState::Expired {
+                        reason: "Session expired. Please sign in again.".to_string(),
+                    };
                 } else {
                     *self.state.write().await = SessionState::Expired {
                         reason: "Session expired. Please sign in again.".to_string(),
@@ -101,11 +113,15 @@ impl SessionManager {
     ) -> Result<SessionState, LimenError> {
         let clean_url = start_url.trim().to_string();
         if !clean_url.starts_with("https://") {
-            return Err(LimenError::Aws {
+            let err = LimenError::Aws {
                 code: "InvalidRequestException".to_string(),
                 message: "Start URL must start with https://".to_string(),
                 retryable: false,
-            });
+            };
+            *self.state.write().await = SessionState::Failed {
+                message: "Start URL must start with https://".to_string(),
+            };
+            return Err(err);
         }
 
         let _ = storage::save_last_session(&clean_url, &region).await;
@@ -113,22 +129,55 @@ impl SessionManager {
         self.cancel_flag.store(false, Ordering::SeqCst);
         *self.state.write().await = SessionState::Registering;
 
-        let client = self.get_client(&region).await;
+        match self.do_begin_login(&clean_url, &region).await {
+            Ok(awaiting_state) => Ok(awaiting_state),
+            Err(e) => {
+                let msg = match &e {
+                    LimenError::Aws { message, .. } => message.clone(),
+                    LimenError::ConfigFile { reason, .. } => reason.clone(),
+                    LimenError::Keychain { reason } => reason.clone(),
+                    other => other.to_string(),
+                };
+                *self.state.write().await = SessionState::Failed { message: msg };
+                Err(e)
+            }
+        }
+    }
+
+    async fn do_begin_login(
+        &self,
+        clean_url: &str,
+        region: &str,
+    ) -> Result<SessionState, LimenError> {
+        let client = self.get_client(region).await;
 
         // 1. Get or register client
-        let reg = match storage::get_client_registration(&clean_url).await? {
+        let reg = match storage::get_client_registration(clean_url, region).await? {
             Some(cached) => cached,
             None => {
-                let fresh = client.register_client("limen", &clean_url).await?;
-                storage::save_client_registration(&clean_url, &fresh).await?;
+                let fresh = client.register_client("limen", clean_url).await?;
+                storage::save_client_registration(clean_url, region, &fresh).await?;
                 fresh
             }
         };
 
-        // 2. Start device authorization
-        let auth_resp = client
-            .start_device_authorization(&reg.client_id, &reg.client_secret, &clean_url)
-            .await?;
+        // 2. Start device authorization (with retry if cached client is rejected)
+        let (auth_resp, effective_client_id, effective_client_secret) = match client
+            .start_device_authorization(&reg.client_id, &reg.client_secret, clean_url)
+            .await
+        {
+            Ok(resp) => (resp, reg.client_id, reg.client_secret),
+            Err(err) => {
+                tracing::warn!(error = ?err, "start_device_authorization failed with cached client, re-registering...");
+                let _ = storage::delete_client_registration(clean_url, region).await;
+                let fresh = client.register_client("limen", clean_url).await?;
+                storage::save_client_registration(clean_url, region, &fresh).await?;
+                let resp = client
+                    .start_device_authorization(&fresh.client_id, &fresh.client_secret, clean_url)
+                    .await?;
+                (resp, fresh.client_id, fresh.client_secret)
+            }
+        };
 
         // 3. Open browser safely while suppressing window blur hide (never during automated tests or mock mode)
         if !cfg!(test) && self.mock_client.is_none() {
@@ -157,11 +206,11 @@ impl SessionManager {
         let client_clone = Arc::clone(&client);
         let cancel_flag = Arc::clone(&self.cancel_flag);
         let device_code = auth_resp.device_code;
-        let client_id = reg.client_id;
-        let client_secret = reg.client_secret;
+        let client_id = effective_client_id;
+        let client_secret = effective_client_secret;
         let mut interval_secs = auth_resp.interval.max(1) as u64;
-        let target_url = clean_url;
-        let target_region = region;
+        let target_url = clean_url.to_string();
+        let target_region = region.to_string();
 
         tokio::spawn(async move {
             loop {
@@ -256,7 +305,7 @@ impl SessionManager {
             None => return Err(LimenError::NotAuthenticated),
         };
 
-        let reg = match storage::get_client_registration(&current_tokens.start_url).await? {
+        let reg = match storage::get_client_registration(&current_tokens.start_url, &current_tokens.region).await? {
             Some(r) => r,
             None => {
                 *self.state.write().await = SessionState::Expired {
