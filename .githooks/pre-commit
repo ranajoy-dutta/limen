@@ -5,8 +5,8 @@
 set -e
 
 # 1. AWS Secret Check (< 0.1s)
-# Prevent staging apparent AWS Access Key IDs
-if git diff --cached -S"AKIA" --quiet; then
+# Prevent staging apparent AWS Access Key IDs (excluding the hook script itself)
+if git diff --cached -- ':!.githooks' -S"AKIA" --quiet; then
   :
 else
   echo "[ERROR] Potential AWS Access Key ('AKIA...') found in staged changes."

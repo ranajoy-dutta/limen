@@ -162,6 +162,37 @@ fn test_storage_key_schemes() {
 
     let key = account_key(url);
     assert_eq!(key, format!("tenant:{hash}:tokens"));
+
+    let client_key_1 = limen_lib::core::storage::hash_client_key(url, "us-east-1");
+    let client_key_2 = limen_lib::core::storage::hash_client_key(url, "us-east-2");
+    assert_ne!(client_key_1, client_key_2);
+}
+
+#[tokio::test]
+async fn test_begin_login_invalid_url_sets_failed_state() {
+    let mock_client = Arc::new(MockSsoOidcClient::new(0));
+    let ignore_blur = Arc::new(AtomicBool::new(false));
+    let session_mgr = SessionManager::new(Some(mock_client), ignore_blur);
+
+    let res = session_mgr
+        .begin_login(
+            "invalid-url-without-https".to_string(),
+            "us-east-1".to_string(),
+        )
+        .await;
+    assert!(res.is_err());
+
+    let state = session_mgr.get_state().await;
+    match state {
+        SessionState::Failed { message } => {
+            assert!(message.contains("https://"));
+        }
+        other => panic!("Expected Failed state, got {:?}", other),
+    }
+
+    // Cancel should reset to LoggedOut
+    session_mgr.cancel_login().await.unwrap();
+    assert_eq!(session_mgr.get_state().await, SessionState::LoggedOut);
 }
 
 #[test]

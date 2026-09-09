@@ -133,12 +133,21 @@ fn client_cache_dir() -> Result<PathBuf, LimenError> {
     Ok(dir)
 }
 
+pub fn hash_client_key(start_url: &str, region: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(start_url.trim().as_bytes());
+    hasher.update(b"#");
+    hasher.update(region.trim().as_bytes());
+    format!("{:x}", hasher.finalize())
+}
+
 pub async fn save_client_registration(
     start_url: &str,
+    region: &str,
     registration: &ClientRegistration,
 ) -> Result<(), LimenError> {
     let dir = client_cache_dir()?;
-    let file_path = dir.join(format!("{}.json", hash_start_url(start_url)));
+    let file_path = dir.join(format!("{}.json", hash_client_key(start_url, region)));
     let data = serde_json::to_string_pretty(registration).map_err(|e| {
         LimenError::internal(format!("Failed to serialize client registration: {e}"))
     })?;
@@ -165,9 +174,10 @@ pub async fn save_client_registration(
 
 pub async fn get_client_registration(
     start_url: &str,
+    region: &str,
 ) -> Result<Option<ClientRegistration>, LimenError> {
     let dir = client_cache_dir()?;
-    let file_path = dir.join(format!("{}.json", hash_start_url(start_url)));
+    let file_path = dir.join(format!("{}.json", hash_client_key(start_url, region)));
 
     if !file_path.exists() {
         return Ok(None);
@@ -195,6 +205,24 @@ pub async fn get_client_registration(
     })
     .await
     .map_err(|e| LimenError::internal(format!("Join error reading client registration: {e}")))?
+}
+
+pub async fn delete_client_registration(start_url: &str, region: &str) -> Result<(), LimenError> {
+    let dir = client_cache_dir()?;
+    let file_path = dir.join(format!("{}.json", hash_client_key(start_url, region)));
+    let legacy_path = dir.join(format!("{}.json", hash_start_url(start_url)));
+
+    tokio::task::spawn_blocking(move || {
+        if file_path.exists() {
+            let _ = fs::remove_file(&file_path);
+        }
+        if legacy_path.exists() {
+            let _ = fs::remove_file(&legacy_path);
+        }
+        Ok::<(), LimenError>(())
+    })
+    .await
+    .map_err(|e| LimenError::internal(format!("Join error deleting client registration: {e}")))?
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
