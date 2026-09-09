@@ -112,6 +112,26 @@ git config core.hooksPath .githooks
 
 ---
 
+## Release Process (Maintainers)
+
+Limen uses automated, tag-triggered GitHub Actions releases:
+
+1. **Verify Manifest Parity**: Ensure `package.json`, `src-tauri/Cargo.toml`, and `src-tauri/tauri.conf.json` share the target version string.
+2. **Tag the Release**:
+   ```bash
+   git tag v0.1.0
+   git push origin v0.1.0
+   ```
+3. **Automated Deployment**:
+   - The `.github/workflows/release.yml` workflow compiles the native macOS DMG on Apple Silicon runners (`macos-14`).
+   - Calculates SHA-256 checksums (`SHA256SUMS.txt`).
+   - Publishes the GitHub Release with downloadable assets and automated release notes.
+4. **Update Homebrew Cask**:
+   - Copy the generated SHA-256 hash from `SHA256SUMS.txt`.
+   - Update `Casks/limen.rb` in your `homebrew-tap` repository with the new version and sha256.
+
+---
+
 ## License
 
 By contributing to Limen, you agree that your contributions will be licensed under the project's [MIT License](LICENSE).

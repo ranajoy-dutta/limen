@@ -1,5 +1,6 @@
 # Limen
 
+[![CI](https://github.com/ranajoy-dutta/limen/actions/workflows/ci.yml/badge.svg)](https://github.com/ranajoy-dutta/limen/actions/workflows/ci.yml)
 [![macOS](https://img.shields.io/badge/Platform-macOS%2012%2B-blue?logo=apple&logoColor=white)](https://apple.com)
 [![Rust](https://img.shields.io/badge/Backend-Rust%202021-orange?logo=rust&logoColor=white)](https://www.rust-lang.org/)
 [![Tauri](https://img.shields.io/badge/Framework-Tauri%20v2-24C8D8?logo=tauri&logoColor=white)](https://v2.tauri.app/)
@@ -50,15 +51,30 @@ graph TD
 
 ## Installation
 
-### Pre-built Binaries (macOS Apple Silicon)
+### Option 1: Homebrew (Recommended)
 
-Download the latest `.dmg` or `.app` release:
+Install via the official tap:
+
+```bash
+brew install --cask ranajoy-dutta/tap/limen
+```
+
+To update in the future:
+```bash
+brew upgrade --cask limen
+```
+
+---
+
+### Option 2: Direct Download (DMG)
+
+Download the latest `.dmg` release from [GitHub Releases](https://github.com/ranajoy-dutta/limen/releases):
 1. Open `Limen_0.1.0_aarch64.dmg`.
 2. Drag **Limen.app** into your `/Applications` folder.
 3. Launch Limen from `/Applications` or Spotlight.
 
 > **Note on macOS Gatekeeper:**
-> For locally compiled or unnotarized builds, macOS may prompt an untrusted developer warning on first launch.
+> For first launch on unnotarized builds, macOS may prompt a standard security notice.
 > - **GUI**: Right-click `Limen.app` in Finder → Select **Open** → Click **Open**.
 > - **CLI**: Run `xattr -cr /Applications/Limen.app` once.
 
