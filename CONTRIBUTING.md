@@ -128,7 +128,7 @@ Limen uses automated, tag-triggered GitHub Actions releases:
    - Publishes the GitHub Release with downloadable assets and automated release notes.
 4. **Update Homebrew Cask**:
    - Copy the generated SHA-256 hash from `SHA256SUMS.txt`.
-   - Update `Casks/limen.rb` in your `homebrew-tap` repository with the new version and sha256.
+   - Update `Casks/limen.rb` in this repository with the new version and sha256.
 
 ---
 

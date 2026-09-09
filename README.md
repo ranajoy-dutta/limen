@@ -53,10 +53,16 @@ graph TD
 
 ### Option 1: Homebrew (Recommended)
 
-Install via the official tap:
+Install via Homebrew:
 
 ```bash
 brew install --cask ranajoy-dutta/tap/limen
+```
+
+Or tap explicitly first:
+```bash
+brew tap ranajoy-dutta/tap
+brew install --cask limen
 ```
 
 To update in the future:
@@ -74,9 +80,10 @@ Download the latest `.dmg` release from [GitHub Releases](https://github.com/ran
 3. Launch Limen from `/Applications` or Spotlight.
 
 > **Note on macOS Gatekeeper:**
-> For first launch on unnotarized builds, macOS may prompt a standard security notice.
-> - **GUI**: Right-click `Limen.app` in Finder → Select **Open** → Click **Open**.
-> - **CLI**: Run `xattr -cr /Applications/Limen.app` once.
+> If macOS displays *"Limen is damaged and can't be opened"*, this is Apple's standard prompt for unnotarized open-source binaries. Simply remove the quarantine attribute:
+> ```bash
+> xattr -cr /Applications/Limen.app
+> ```
 
 ---
 
