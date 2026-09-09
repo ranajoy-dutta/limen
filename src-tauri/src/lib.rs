@@ -37,17 +37,15 @@ pub fn run() {
     let active_profile = Arc::new(RwLock::new(None));
 
     // Optional mock client if LIMEN_MOCK_AUTH=1, else real dynamic AWS SDK client
-    let mock_client: Option<Arc<dyn SsoOidcClient>> = if std::env::var("LIMEN_MOCK_AUTH").unwrap_or_default() == "1" {
-        tracing::info!("Running in LIMEN_MOCK_AUTH mode");
-        Some(Arc::new(MockSsoOidcClient::new(3)))
-    } else {
-        None
-    };
+    let mock_client: Option<Arc<dyn SsoOidcClient>> =
+        if std::env::var("LIMEN_MOCK_AUTH").unwrap_or_default() == "1" {
+            tracing::info!("Running in LIMEN_MOCK_AUTH mode");
+            Some(Arc::new(MockSsoOidcClient::new(3)))
+        } else {
+            None
+        };
 
-    let session_manager = Arc::new(SessionManager::new(
-        mock_client,
-        Arc::clone(&ignore_blur),
-    ));
+    let session_manager = Arc::new(SessionManager::new(mock_client, Arc::clone(&ignore_blur)));
 
     let app_state = AppState {
         session_manager,
@@ -109,7 +107,7 @@ pub fn run() {
                         let clear_color: *mut Object = msg_send![class!(NSColor), clearColor];
                         let _: () = msg_send![wk_webview, setBackgroundColor: clear_color];
 
-                        let key: *mut Object = msg_send![class!(NSString), stringWithUTF8String: b"drawsBackground\0".as_ptr()];
+                        let key: *mut Object = msg_send![class!(NSString), stringWithUTF8String: c"drawsBackground".as_ptr()];
                         let no_num: *mut Object = msg_send![class!(NSNumber), numberWithBool: NO];
                         let _: () = msg_send![wk_webview, setValue:no_num forKey:key];
                     }

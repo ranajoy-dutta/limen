@@ -21,7 +21,10 @@ fn aws_credentials_path() -> Result<PathBuf, LimenError> {
     Ok(aws_dir.join("credentials"))
 }
 
-fn atomic_write_credentials_file(creds_file: &std::path::Path, content: &str) -> Result<(), LimenError> {
+fn atomic_write_credentials_file(
+    creds_file: &std::path::Path,
+    content: &str,
+) -> Result<(), LimenError> {
     let parent = creds_file
         .parent()
         .ok_or_else(|| LimenError::internal("Missing credentials parent directory"))?;
@@ -49,7 +52,9 @@ fn atomic_write_credentials_file(creds_file: &std::path::Path, content: &str) ->
 }
 
 fn active_profiles_path() -> Result<PathBuf, LimenError> {
-    let dir = crate::core::storage::get_home_dir()?.join(".config").join("limen");
+    let dir = crate::core::storage::get_home_dir()?
+        .join(".config")
+        .join("limen");
     if !dir.exists() {
         let _ = fs::create_dir_all(&dir);
     }
@@ -68,7 +73,8 @@ pub async fn load_active_profiles() -> Result<HashMap<String, ActiveProfile>, Li
             reason: e.to_string(),
         })?;
 
-        let map: HashMap<String, ActiveProfile> = serde_json::from_str(&content).unwrap_or_default();
+        let map: HashMap<String, ActiveProfile> =
+            serde_json::from_str(&content).unwrap_or_default();
         let now = Utc::now();
         // Filter out expired profiles
         let valid: HashMap<String, ActiveProfile> = map
@@ -82,7 +88,9 @@ pub async fn load_active_profiles() -> Result<HashMap<String, ActiveProfile>, Li
     .map_err(|e| LimenError::internal(format!("Join error reading active profiles: {e}")))?
 }
 
-pub async fn save_active_profiles(profiles: &HashMap<String, ActiveProfile>) -> Result<(), LimenError> {
+pub async fn save_active_profiles(
+    profiles: &HashMap<String, ActiveProfile>,
+) -> Result<(), LimenError> {
     let path = active_profiles_path()?;
     let data = serde_json::to_string_pretty(profiles)
         .map_err(|e| LimenError::internal(format!("Failed to serialize active profiles: {e}")))?;
@@ -161,12 +169,10 @@ pub async fn activate_role(
                     retryable: false,
                 })?;
 
-            let creds = resp.role_credentials().ok_or_else(|| {
-                LimenError::Aws {
-                    code: "MissingCredentials".to_string(),
-                    message: "AWS SSO returned empty role credentials".to_string(),
-                    retryable: false,
-                }
+            let creds = resp.role_credentials().ok_or_else(|| LimenError::Aws {
+                code: "MissingCredentials".to_string(),
+                message: "AWS SSO returned empty role credentials".to_string(),
+                retryable: false,
             })?;
 
             let access_key = creds.access_key_id().unwrap_or_default().to_string();
