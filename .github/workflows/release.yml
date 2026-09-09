@@ -48,12 +48,12 @@ jobs:
           cat SHA256SUMS.txt
 
       - name: Attest Build Provenance (SLSA)
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: 'src-tauri/target/release/bundle/dmg/*.dmg'
 
       - name: Publish GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             src-tauri/target/release/bundle/dmg/*.dmg
