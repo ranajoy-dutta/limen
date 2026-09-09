@@ -61,7 +61,9 @@ impl SessionManager {
         };
 
         // Proactively refresh if token expires within 15 minutes and refresh token is available
-        if current.expires_at < Utc::now() + Duration::minutes(15) && !current.refresh_token.is_empty() {
+        if current.expires_at < Utc::now() + Duration::minutes(15)
+            && !current.refresh_token.is_empty()
+        {
             tracing::info!("Access token expiring within 15m; proactively refreshing session");
             if let Ok(()) = self.refresh_active_session().await {
                 if let Some(refreshed) = self.get_tokens().await {
@@ -188,8 +190,7 @@ impl SessionManager {
                         refresh_token,
                         expires_in,
                     }) => {
-                        let token_expires_at =
-                            Utc::now() + Duration::seconds(expires_in as i64);
+                        let token_expires_at = Utc::now() + Duration::seconds(expires_in as i64);
 
                         let tokens = SsoTokens {
                             access_token,

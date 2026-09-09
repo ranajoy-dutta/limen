@@ -156,11 +156,14 @@ impl SsoOidcClient for AwsSsoOidcClient {
             Err(e) => {
                 if let Some(err_code) = e.code() {
                     match err_code {
-                        "AuthorizationPendingException" => Ok(CreateTokenOutcome::AuthorizationPending),
+                        "AuthorizationPendingException" => {
+                            Ok(CreateTokenOutcome::AuthorizationPending)
+                        }
                         "SlowDownException" => Ok(CreateTokenOutcome::SlowDown),
                         "ExpiredTokenException" => Err(LimenError::Aws {
                             code: err_code.to_string(),
-                            message: "Verification code expired. Please restart sign in.".to_string(),
+                            message: "Verification code expired. Please restart sign in."
+                                .to_string(),
                             retryable: false,
                         }),
                         "AccessDeniedException" => Err(LimenError::Aws {
@@ -224,7 +227,9 @@ fn map_sdk_error<E: ProvideErrorMetadata + std::fmt::Display>(op: &str, err: &E)
             retryable: false,
         }
     } else if code == "SlowDownException" || code == "ThrottlingException" {
-        LimenError::Throttled { retry_after: Some(5) }
+        LimenError::Throttled {
+            retry_after: Some(5),
+        }
     } else {
         LimenError::Aws {
             code,

@@ -74,6 +74,27 @@ npm install
   ```
 - Keep CSS modular and semantic in `src/app.css`. Maintain high-contrast, accessible dark theme tokens.
 
+### Manifest Version Parity
+When preparing a version bump or release, keep all project manifests synchronized with identical version numbers:
+- `package.json`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+
+---
+
+## Continuous Integration & Quality Checks
+
+All Pull Requests trigger automated GitHub Actions CI:
+- **Manifest Version Parity**: Ensures all manifest files declare identical versions.
+- **Frontend Check**: Runs `npm run check` (`svelte-check`).
+- **Backend Check**: Runs `cargo fmt -- --check`, `cargo clippy --all-targets -- -D warnings`, and `cargo test` on macOS.
+
+### Optional: Local Pre-Commit Hook
+If you prefer running fast checks (secret scanning, version parity, and typechecks) automatically before each commit, you can enable the repository's lightweight hook:
+```bash
+git config core.hooksPath .githooks
+```
+
 ---
 
 ## Submitting a Pull Request
