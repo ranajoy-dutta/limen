@@ -86,12 +86,11 @@ pub async fn get_tokens(start_url: &str) -> Result<Option<SsoTokens>, LimenError
             reason: e.to_string(),
         })?;
 
-        let tokens: SsoTokens = serde_json::from_str(&content).map_err(|e| {
-            LimenError::ConfigFile {
+        let tokens: SsoTokens =
+            serde_json::from_str(&content).map_err(|e| LimenError::ConfigFile {
                 path: file_path.display().to_string(),
                 reason: format!("JSON parse error: {e}"),
-            }
-        })?;
+            })?;
 
         Ok(Some(tokens))
     })
@@ -116,7 +115,10 @@ pub async fn delete_tokens(start_url: &str) -> Result<(), LimenError> {
 }
 
 fn client_cache_dir() -> Result<PathBuf, LimenError> {
-    let dir = get_home_dir()?.join(".config").join("limen").join("clients");
+    let dir = get_home_dir()?
+        .join(".config")
+        .join("limen")
+        .join("clients");
     if !dir.exists() {
         fs::create_dir_all(&dir).map_err(|e| LimenError::ConfigFile {
             path: dir.display().to_string(),
@@ -146,8 +148,9 @@ pub async fn save_client_registration(
 ) -> Result<(), LimenError> {
     let dir = client_cache_dir()?;
     let file_path = dir.join(format!("{}.json", hash_client_key(start_url, region)));
-    let data = serde_json::to_string_pretty(registration)
-        .map_err(|e| LimenError::internal(format!("Failed to serialize client registration: {e}")))?;
+    let data = serde_json::to_string_pretty(registration).map_err(|e| {
+        LimenError::internal(format!("Failed to serialize client registration: {e}"))
+    })?;
 
     tokio::task::spawn_blocking(move || {
         fs::write(&file_path, data).map_err(|e| LimenError::ConfigFile {
@@ -186,12 +189,11 @@ pub async fn get_client_registration(
             reason: e.to_string(),
         })?;
 
-        let reg: ClientRegistration = serde_json::from_str(&content).map_err(|e| {
-            LimenError::ConfigFile {
+        let reg: ClientRegistration =
+            serde_json::from_str(&content).map_err(|e| LimenError::ConfigFile {
                 path: file_path.display().to_string(),
                 reason: format!("JSON parse error: {e}"),
-            }
-        })?;
+            })?;
 
         let now = chrono::Utc::now().timestamp();
         if reg.client_secret_expires_at <= now {
@@ -205,10 +207,7 @@ pub async fn get_client_registration(
     .map_err(|e| LimenError::internal(format!("Join error reading client registration: {e}")))?
 }
 
-pub async fn delete_client_registration(
-    start_url: &str,
-    region: &str,
-) -> Result<(), LimenError> {
+pub async fn delete_client_registration(start_url: &str, region: &str) -> Result<(), LimenError> {
     let dir = client_cache_dir()?;
     let file_path = dir.join(format!("{}.json", hash_client_key(start_url, region)));
     let legacy_path = dir.join(format!("{}.json", hash_start_url(start_url)));
@@ -267,7 +266,10 @@ pub async fn save_last_session(start_url: &str, region: &str) -> Result<(), Lime
 }
 
 pub async fn get_last_session() -> Result<Option<LastSessionInfo>, LimenError> {
-    let file_path = get_home_dir()?.join(".config").join("limen").join("last_session.json");
+    let file_path = get_home_dir()?
+        .join(".config")
+        .join("limen")
+        .join("last_session.json");
     if !file_path.exists() {
         return Ok(None);
     }
@@ -277,10 +279,11 @@ pub async fn get_last_session() -> Result<Option<LastSessionInfo>, LimenError> {
             path: file_path.display().to_string(),
             reason: e.to_string(),
         })?;
-        let info: LastSessionInfo = serde_json::from_str(&content).map_err(|e| LimenError::ConfigFile {
-            path: file_path.display().to_string(),
-            reason: format!("JSON parse error: {e}"),
-        })?;
+        let info: LastSessionInfo =
+            serde_json::from_str(&content).map_err(|e| LimenError::ConfigFile {
+                path: file_path.display().to_string(),
+                reason: format!("JSON parse error: {e}"),
+            })?;
         Ok(Some(info))
     })
     .await

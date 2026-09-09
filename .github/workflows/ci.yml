@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  version-parity:
+    name: Check Manifest Version Parity
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Verify versions match across manifests
+        run: |
+          V_PKG=$(node -p "require('./package.json').version")
+          V_TAURI=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          V_CARGO=$(grep '^version = ' src-tauri/Cargo.toml | head -1 | cut -d '"' -f 2)
+
+          echo "package.json:            $V_PKG"
+          echo "src-tauri/tauri.conf.json: $V_TAURI"
+          echo "src-tauri/Cargo.toml:    $V_CARGO"
+
+          if [ "$V_PKG" != "$V_TAURI" ] || [ "$V_PKG" != "$V_CARGO" ]; then
+            echo "::error::Version mismatch across manifests! Keep all versions synchronized."
+            exit 1
+          fi
+
+  frontend:
+    name: Frontend Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run svelte-check
+        run: npm run check
+
+  backend:
+    name: Backend Format, Lint & Test
+    runs-on: macos-14
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "src-tauri -> target"
+
+      - name: Check code formatting
+        run: cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+
+      - name: Run clippy
+        run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+
+      - name: Run tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml

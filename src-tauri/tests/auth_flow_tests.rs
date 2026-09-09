@@ -55,7 +55,10 @@ async fn test_auth_state_flow_to_active() {
     }
 
     // Check active tokens in memory
-    let tokens = session_mgr.get_tokens().await.expect("Tokens should be active");
+    let tokens = session_mgr
+        .get_tokens()
+        .await
+        .expect("Tokens should be active");
     assert_eq!(tokens.access_token, "mock-access-token-xyz");
     assert_eq!(tokens.refresh_token, "mock-refresh-token-rotated-1");
 
@@ -69,8 +72,14 @@ async fn test_auth_state_flow_to_active() {
         .get_tokens()
         .await
         .expect("Refreshed tokens should exist");
-    assert_eq!(refreshed_tokens.access_token, "mock-refreshed-access-token-new");
-    assert_eq!(refreshed_tokens.refresh_token, "mock-refresh-token-rotated-2");
+    assert_eq!(
+        refreshed_tokens.access_token,
+        "mock-refreshed-access-token-new"
+    );
+    assert_eq!(
+        refreshed_tokens.refresh_token,
+        "mock-refresh-token-rotated-2"
+    );
 
     // Test Logout
     session_mgr.logout().await.expect("Logout should succeed");
@@ -92,7 +101,10 @@ async fn test_auth_cancel_flow() {
         .await
         .expect("begin_login should succeed");
 
-    session_mgr.cancel_login().await.expect("Cancel should succeed");
+    session_mgr
+        .cancel_login()
+        .await
+        .expect("Cancel should succeed");
     assert_eq!(session_mgr.get_state().await, SessionState::LoggedOut);
 }
 
@@ -122,10 +134,15 @@ async fn test_refresh_failure_transitions_to_expired() {
         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
     }
 
-    assert!(matches!(session_mgr.get_state().await, SessionState::Active { .. }));
+    assert!(matches!(
+        session_mgr.get_state().await,
+        SessionState::Active { .. }
+    ));
 
     // Now tell mock client that refresh should fail
-    mock_client.refresh_should_fail.store(true, Ordering::SeqCst);
+    mock_client
+        .refresh_should_fail
+        .store(true, Ordering::SeqCst);
 
     let refresh_res = session_mgr.refresh_active_session().await;
     assert!(refresh_res.is_err());
@@ -158,7 +175,10 @@ async fn test_begin_login_invalid_url_sets_failed_state() {
     let session_mgr = SessionManager::new(Some(mock_client), ignore_blur);
 
     let res = session_mgr
-        .begin_login("invalid-url-without-https".to_string(), "us-east-1".to_string())
+        .begin_login(
+            "invalid-url-without-https".to_string(),
+            "us-east-1".to_string(),
+        )
         .await;
     assert!(res.is_err());
 

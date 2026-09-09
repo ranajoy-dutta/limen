@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Git pre-commit hook (opt-in)
+# Enable with: git config core.hooksPath .githooks
+
+set -e
+
+# 1. AWS Secret Check (< 0.1s)
+# Prevent staging apparent AWS Access Key IDs (excluding the hook script itself)
+if git diff --cached -- ':!.githooks' -S"AKIA" --quiet; then
+  :
+else
+  echo "[ERROR] Potential AWS Access Key ('AKIA...') found in staged changes."
+  echo "        Please review staged changes to prevent committing credentials."
+  exit 1
+fi
+
+# 2. Manifest Version Parity Check (< 0.1s)
+# Ensures versions remain synchronized across manifests for releases
+V_PKG=$(node -p "require('./package.json').version" 2>/dev/null || echo "")
+V_TAURI=$(node -p "require('./src-tauri/tauri.conf.json').version" 2>/dev/null || echo "")
+V_CARGO=$(grep '^version = ' src-tauri/Cargo.toml 2>/dev/null | head -1 | cut -d '"' -f 2 || echo "")
+
+if [ -n "$V_PKG" ] && [ -n "$V_TAURI" ] && [ -n "$V_CARGO" ]; then
+  if [ "$V_PKG" != "$V_TAURI" ] || [ "$V_PKG" != "$V_CARGO" ]; then
+    echo "[ERROR] Version mismatch across manifests:"
+    echo "        package.json:              $V_PKG"
+    echo "        src-tauri/tauri.conf.json: $V_TAURI"
+    echo "        src-tauri/Cargo.toml:      $V_CARGO"
+    exit 1
+  fi
+fi
+
+# 3. Code Formatting Check
+if rustup which rustfmt >/dev/null 2>&1; then
+  cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+else
+  echo "[WARN] rustfmt component not installed locally; skipping local cargo fmt check (CI will verify)."
+fi
+
+# 4. Svelte & TypeScript Typecheck (~1.5s)
+npm run check

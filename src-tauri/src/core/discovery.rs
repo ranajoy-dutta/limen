@@ -4,7 +4,10 @@ use std::fs;
 use std::path::PathBuf;
 
 fn cache_dir() -> Result<PathBuf, LimenError> {
-    let dir = crate::core::storage::get_home_dir()?.join(".config").join("limen").join("cache");
+    let dir = crate::core::storage::get_home_dir()?
+        .join(".config")
+        .join("limen")
+        .join("cache");
     if !dir.exists() {
         fs::create_dir_all(&dir).map_err(|e| LimenError::ConfigFile {
             path: dir.display().to_string(),
@@ -32,12 +35,11 @@ pub async fn get_cached_accounts(start_url_hash: &str) -> Result<Option<Vec<Acco
             reason: e.to_string(),
         })?;
 
-        let accounts: Vec<Account> = serde_json::from_str(&content).map_err(|e| {
-            LimenError::ConfigFile {
+        let accounts: Vec<Account> =
+            serde_json::from_str(&content).map_err(|e| LimenError::ConfigFile {
                 path: file_path.display().to_string(),
                 reason: format!("Corrupt account cache: {e}"),
-            }
-        })?;
+            })?;
 
         Ok(Some(accounts))
     })
@@ -127,9 +129,7 @@ pub async fn fetch_accounts(
     let mut next_token: Option<String> = None;
 
     loop {
-        let mut req = sso_client
-            .list_accounts()
-            .access_token(access_token);
+        let mut req = sso_client.list_accounts().access_token(access_token);
 
         if let Some(token) = next_token {
             req = req.next_token(token);
@@ -200,9 +200,9 @@ pub async fn fetch_accounts(
     }
 
     for acct in &mut accounts {
-        acct.roles.sort_by(|a, b| a.role_name.to_lowercase().cmp(&b.role_name.to_lowercase()));
+        acct.roles.sort_by_key(|a| a.role_name.to_lowercase());
     }
-    accounts.sort_by(|a, b| a.account_name.to_lowercase().cmp(&b.account_name.to_lowercase()));
+    accounts.sort_by_key(|a| a.account_name.to_lowercase());
 
     save_cached_accounts(start_url_hash, &accounts).await?;
     Ok(accounts)
