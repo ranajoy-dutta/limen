@@ -398,7 +398,7 @@ pub async fn refresh_all_active_profiles(
     let mut any_refreshed = false;
     for profile in to_refresh {
         let is_default = profile.profile_name == "default";
-        if let Ok(_) = activate_role(
+        if activate_role(
             access_token,
             region,
             &profile.account_id,
@@ -408,6 +408,7 @@ pub async fn refresh_all_active_profiles(
             is_default,
         )
         .await
+        .is_ok()
         {
             any_refreshed = true;
         }

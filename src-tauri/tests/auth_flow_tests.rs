@@ -236,7 +236,10 @@ async fn test_watchdog_auto_refresh_when_nearing_expiry() {
         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
     }
 
-    assert!(matches!(session_mgr.get_state().await, SessionState::Active { .. }));
+    assert!(matches!(
+        session_mgr.get_state().await,
+        SessionState::Active { .. }
+    ));
 
     let state = session_mgr
         .check_and_refresh_session()

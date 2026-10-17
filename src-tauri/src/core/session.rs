@@ -41,7 +41,10 @@ impl SessionManager {
         if let SessionState::Active { expires_at, .. } = current_state {
             if expires_at <= Utc::now() {
                 let mut state_guard = self.state.write().await;
-                if let SessionState::Active { expires_at: exp, .. } = *state_guard {
+                if let SessionState::Active {
+                    expires_at: exp, ..
+                } = *state_guard
+                {
                     if exp <= Utc::now() {
                         *state_guard = SessionState::Expired {
                             reason: "Session expired. Please sign in again.".to_string(),
