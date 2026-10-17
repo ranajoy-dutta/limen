@@ -95,8 +95,8 @@ Download `Limen_0.1.0_aarch64.pkg` from [GitHub Releases](https://github.com/ran
 2. Follow the standard macOS installer prompts (*Continue* → *Install*).
 3. Limen will be automatically placed in `/Applications`.
 
-> **Note if Gatekeeper blocks opening on managed laptops:**
-> Right-click (or Control-click) the `.pkg` file and choose **Open**, then click **Open** in the dialog. Alternatively:
+> **Note on macOS Gatekeeper:**
+> If macOS prevents opening the unsigned `.pkg` installer, right-click (or Control-click) the `.pkg` file and choose **Open**, approve via **System Settings > Privacy & Security > Open Anyway**, or remove the quarantine attribute:
 > ```bash
 > xattr -d com.apple.quarantine Limen_0.1.0_aarch64.pkg
 > ```

@@ -71,6 +71,12 @@ jobs:
             release-artifacts/*.dmg
             release-artifacts/*.pkg
             release-artifacts/SHA256SUMS.txt
+          body: |
+            > **macOS Gatekeeper Notice:**
+            > If macOS blocks opening the unsigned installer, right-click (or Control-click) the `.pkg`/`.dmg` and choose **Open**, approve via **System Settings > Privacy & Security > Open Anyway**, or run:
+            > ```bash
+            > xattr -d com.apple.quarantine Limen_*.pkg
+            > ```
           generate_release_notes: true
           draft: false
           prerelease: false

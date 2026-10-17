@@ -142,10 +142,7 @@ fn position_window_at_tray(
 
         let _ = win.set_position(tauri::LogicalPosition::new(target_x, target_y));
     } else {
-        let _ = win
-            .as_ref()
-            .window()
-            .move_window_constrained(Position::TrayCenter);
+        let _ = win.as_ref().window().move_window(Position::TrayCenter);
     }
 }
 
@@ -218,11 +215,13 @@ pub fn run() {
                         let _: () = msg_send![ns_window, setHasShadow: NO];
                         let _: () = msg_send![ns_window, invalidateShadow];
 
-                        // Set collection behavior to allow moving across multiple monitors and spaces:
-                        // 1 << 0: NSWindowCollectionBehaviorCanJoinAllSpaces
+                        // Set collection behavior so the window moves to the active space when summoned
+                        // and can display over full-screen apps:
                         // 1 << 1: NSWindowCollectionBehaviorMoveToActiveSpace
                         // 1 << 8: NSWindowCollectionBehaviorFullScreenAuxiliary
-                        let collection_behavior: usize = (1 << 0) | (1 << 1) | (1 << 8);
+                        // (NSWindowCollectionBehaviorCanJoinAllSpaces (1 << 0) and MoveToActiveSpace (1 << 1)
+                        // are mutually exclusive per Apple documentation).
+                        let collection_behavior: usize = (1 << 1) | (1 << 8);
                         let _: () = msg_send![ns_window, setCollectionBehavior: collection_behavior];
                     }
                 }
