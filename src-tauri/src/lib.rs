@@ -54,7 +54,11 @@ fn position_window_at_tray(
                 click_pos.x >= x && click_pos.x < x + w && click_pos.y >= y && click_pos.y < y + h
             })
         })
-        .or_else(|| win.monitor_from_point(click_pos.x, click_pos.y).ok().flatten())
+        .or_else(|| {
+            win.monitor_from_point(click_pos.x, click_pos.y)
+                .ok()
+                .flatten()
+        })
         .or_else(|| win.current_monitor().ok().flatten())
         .or_else(|| win.primary_monitor().ok().flatten());
 
@@ -76,7 +80,10 @@ fn position_window_at_tray(
         };
 
         let (tray_w, tray_h) = match rect.size {
-            tauri::Size::Physical(s) => (s.width as f64 / scale_factor, s.height as f64 / scale_factor),
+            tauri::Size::Physical(s) => (
+                s.width as f64 / scale_factor,
+                s.height as f64 / scale_factor,
+            ),
             tauri::Size::Logical(l) => (l.width, l.height),
         };
 
@@ -88,7 +95,10 @@ fn position_window_at_tray(
                 .flatten()
                 .map(|m| m.scale_factor())
                 .unwrap_or(scale_factor);
-            (size.width as f64 / cur_scale, size.height as f64 / cur_scale)
+            (
+                size.width as f64 / cur_scale,
+                size.height as f64 / cur_scale,
+            )
         } else {
             (380.0, 520.0)
         };
@@ -132,7 +142,10 @@ fn position_window_at_tray(
 
         let _ = win.set_position(tauri::LogicalPosition::new(target_x, target_y));
     } else {
-        let _ = win.as_ref().window().move_window_constrained(Position::TrayCenter);
+        let _ = win
+            .as_ref()
+            .window()
+            .move_window_constrained(Position::TrayCenter);
     }
 }
 
