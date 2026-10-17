@@ -211,3 +211,68 @@ fn test_error_serialization_discriminated_union() {
     let not_auth_json = serde_json::to_string(&not_auth).unwrap();
     assert_eq!(not_auth_json, "{\"kind\":\"NotAuthenticated\"}");
 }
+
+#[tokio::test]
+async fn test_watchdog_auto_refresh_when_nearing_expiry() {
+    let mock_client = Arc::new(MockSsoOidcClient::new(0));
+    let ignore_blur = Arc::new(AtomicBool::new(false));
+    let session_mgr = SessionManager::new(
+        Some(Arc::clone(&mock_client) as Arc<dyn limen_lib::core::aws_client::SsoOidcClient>),
+        ignore_blur,
+    );
+
+    session_mgr
+        .begin_login(
+            "https://test-portal.awsapps.com/start".to_string(),
+            "us-east-1".to_string(),
+        )
+        .await
+        .expect("begin_login should succeed");
+
+    for _ in 0..50 {
+        if let SessionState::Active { .. } = session_mgr.get_state().await {
+            break;
+        }
+        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    }
+
+    let initial_tokens = session_mgr
+        .get_tokens()
+        .await
+        .expect("Tokens should be active");
+    assert_eq!(initial_tokens.access_token, "mock-access-token-xyz");
+
+    // Simulate token expiring within 2 minutes (inside the 5-minute watchdog window)
+    let mut expiring_tokens = initial_tokens.clone();
+    expiring_tokens.expires_at = chrono::Utc::now() + chrono::Duration::minutes(2);
+    limen_lib::core::storage::save_tokens(&expiring_tokens)
+        .await
+        .expect("Saving tokens should succeed");
+    session_mgr
+        .restore_last_session()
+        .await
+        .expect("Restoring session should succeed");
+
+    let restored_tokens = session_mgr.get_tokens().await.unwrap();
+    assert!(restored_tokens.expires_at < chrono::Utc::now() + chrono::Duration::minutes(3));
+
+    // Watchdog check_and_refresh_session should detect near-expiry, refresh and rotate token
+    let state = session_mgr
+        .check_and_refresh_session()
+        .await
+        .expect("check_and_refresh should succeed");
+    assert!(matches!(state, SessionState::Active { .. }));
+
+    let refreshed_tokens = session_mgr
+        .get_tokens()
+        .await
+        .expect("Refreshed tokens exist");
+    assert_eq!(
+        refreshed_tokens.access_token,
+        "mock-refreshed-access-token-new"
+    );
+    assert_eq!(
+        refreshed_tokens.refresh_token,
+        "mock-refresh-token-rotated-2"
+    );
+}

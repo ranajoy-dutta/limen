@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { invoke } from '@tauri-apps/api/core';
+  import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 
   type SessionState =
     | { status: 'LoggedOut' }
@@ -31,12 +32,21 @@
     expires_at: string;
   }
 
-  let sessionState: SessionState = $state({ status: 'LoggedOut' });
+  let sessionState = $state<SessionState>({ status: 'LoggedOut' });
   let startUrl: string = $state('');
   let region: string = $state('us-east-1');
   let isLoading: boolean = $state(false);
   let errorMessage: string | null = $state(null);
   let copyFeedback: boolean = $state(false);
+
+  let isTokenExpired = $derived(
+    Boolean(
+      (sessionState as SessionState).status === 'Active' &&
+        new Date(
+          (sessionState as Extract<SessionState, { status: 'Active' }>).data?.expires_at
+        ).getTime() <= Date.now()
+    )
+  );
 
   let isInitialized = false;
 
@@ -127,6 +137,8 @@
   }
 
   let pollTimer: ReturnType<typeof setInterval> | null = null;
+  let unlistenSessionState: UnlistenFn | null = null;
+  let unlistenProfiles: UnlistenFn | null = null;
 
   async function fetchState() {
     try {
@@ -138,8 +150,21 @@
         errorMessage = res.data.message;
       }
 
-      if (res.status === 'Active' && wasNotActive) {
-        await loadAccountsAndActiveProfiles();
+      if (res.status === 'Active') {
+        if (wasNotActive) {
+          await loadAccountsAndActiveProfiles();
+        } else {
+          // Continuously keep active profiles synchronized with backend & ~/.aws/credentials
+          try {
+            activeProfiles = await invoke<ActiveProfile[]>('get_active_profiles');
+          } catch (e) {
+            console.error('Failed to update active profiles:', e);
+          }
+        }
+      } else {
+        if (activeProfiles.length > 0) {
+          activeProfiles = [];
+        }
       }
     } catch (e: any) {
       console.error('Failed to get session state:', e);
@@ -221,6 +246,29 @@
   onMount(async () => {
     window.addEventListener('click', handleWindowClick);
 
+    // Subscribe to real-time events emitted by backend watchdog
+    try {
+      unlistenSessionState = await listen<SessionState>('limen://session-state-changed', (event) => {
+        const wasNotActive = sessionState.status !== 'Active';
+        sessionState = event.payload;
+        if (event.payload.status === 'Active' && wasNotActive) {
+          loadAccountsAndActiveProfiles();
+        } else if (event.payload.status === 'Expired' || event.payload.status === 'LoggedOut') {
+          activeProfiles = [];
+        }
+      });
+
+      unlistenProfiles = await listen('limen://profiles-changed', async () => {
+        try {
+          activeProfiles = await invoke<ActiveProfile[]>('get_active_profiles');
+        } catch (e) {
+          console.error('Failed to reload active profiles on event:', e);
+        }
+      });
+    } catch (e) {
+      console.error('Failed to set up event listeners:', e);
+    }
+
     // Restore saved startUrl and region from localStorage or backend last session
     const savedUrl = localStorage.getItem('limen_start_url');
     const savedRegion = localStorage.getItem('limen_region');
@@ -250,12 +298,14 @@
     if (sessionState.status === 'Active') {
       await loadAccountsAndActiveProfiles();
     }
-    pollTimer = setInterval(fetchState, 1500);
+    pollTimer = setInterval(fetchState, 5000);
   });
 
   onDestroy(() => {
     window.removeEventListener('click', handleWindowClick);
     if (pollTimer) clearInterval(pollTimer);
+    if (unlistenSessionState) unlistenSessionState();
+    if (unlistenProfiles) unlistenProfiles();
   });
 
   async function handleLogin() {
@@ -353,15 +403,15 @@
     </div>
 
     <div class="status-badge">
-      {#if sessionState.status === 'Active'}
+      {#if sessionState.status === 'Active' && !isTokenExpired}
         <span class="status-dot active"></span>
         <span>Connected</span>
       {:else if sessionState.status === 'AwaitingApproval' || sessionState.status === 'Registering' || sessionState.status === 'Refreshing'}
         <span class="status-dot pending"></span>
         <span>{sessionState.status}</span>
-      {:else if sessionState.status === 'Failed' || sessionState.status === 'Expired'}
+      {:else if sessionState.status === 'Failed' || sessionState.status === 'Expired' || isTokenExpired}
         <span class="status-dot error"></span>
-        <span>{sessionState.status}</span>
+        <span>Expired</span>
       {:else}
         <span class="status-dot"></span>
         <span>Offline</span>
@@ -501,7 +551,7 @@
         </button>
       </div>
 
-    {:else if sessionState.status === 'Active'}
+    {:else if sessionState.status === 'Active' && !isTokenExpired}
       <!-- Active Profiles Card (Multiple Simultaneous Profiles) -->
       {#if activeProfiles.length > 0}
         <div class="active-profiles-card">
@@ -817,13 +867,13 @@
         </div>
       </footer>
 
-    {:else if sessionState.status === 'Expired'}
+    {:else if sessionState.status === 'Expired' || isTokenExpired}
       <div class="card" style="text-align: center; padding: 24px 16px; display: flex; flex-direction: column; gap: 12px;">
         <div style="font-size: 14px; font-weight: 600; color: var(--warning);">
           Session Expired
         </div>
         <div style="font-size: 12px; color: var(--text-secondary);">
-          {sessionState.data.reason || 'Your AWS SSO session has expired. Please sign in again.'}
+          {(sessionState.status === 'Expired' ? sessionState.data.reason : null) || 'Your AWS SSO session has expired. Please sign in again.'}
         </div>
         <button class="primary-btn" onclick={handleLogin} disabled={isLoading}>
           {isLoading ? 'Signing In...' : 'Sign In Again'}
