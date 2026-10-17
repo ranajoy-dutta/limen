@@ -35,6 +35,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Sync version from git tag
+        run: node scripts/sync-version.js "${GITHUB_REF_NAME}"
+
       - name: Build frontend
         run: npm run build
 
@@ -44,8 +47,12 @@ jobs:
       - name: Build PKG Installer
         run: |
           mkdir -p release-artifacts
-          cp src-tauri/target/release/bundle/dmg/*.dmg release-artifacts/
           VERSION="${GITHUB_REF_NAME#v}"
+          for f in src-tauri/target/release/bundle/dmg/*.dmg; do
+            if [ -f "$f" ]; then
+              cp "$f" "release-artifacts/Limen_${VERSION}_aarch64.dmg"
+            fi
+          done
           pkgbuild --component "src-tauri/target/release/bundle/macos/Limen.app" \
                    --install-location "/Applications" \
                    --version "${VERSION}" \

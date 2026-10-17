@@ -1,6 +1,6 @@
 [package]
 name = "limen"
-version = "0.1.0"
+version = "0.2.0"
 description = "Native macOS menu bar AWS credential switcher"
 authors = ["Ranajoy Dutta"]
 edition = "2021"
