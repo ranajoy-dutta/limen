@@ -30,6 +30,112 @@ fn quit_app(app: tauri::AppHandle) {
     app.exit(0);
 }
 
+/// Positions the tray window reliably across multiple monitors.
+///
+/// Ensures the window is placed on the exact monitor where the tray click occurred,
+/// horizontally centered on the tray icon, and constrained within the visible boundaries of that monitor.
+fn position_window_at_tray(
+    win: &tauri::WebviewWindow,
+    click_pos: tauri::PhysicalPosition<f64>,
+    rect: tauri::Rect,
+) {
+    // 1. Determine the monitor where the tray icon / click is located.
+    let target_monitor = win
+        .available_monitors()
+        .ok()
+        .and_then(|monitors| {
+            monitors.into_iter().find(|mon| {
+                let pos = mon.position();
+                let size = mon.size();
+                let x = pos.x as f64;
+                let y = pos.y as f64;
+                let w = size.width as f64;
+                let h = size.height as f64;
+                click_pos.x >= x && click_pos.x < x + w && click_pos.y >= y && click_pos.y < y + h
+            })
+        })
+        .or_else(|| win.monitor_from_point(click_pos.x, click_pos.y).ok().flatten())
+        .or_else(|| win.current_monitor().ok().flatten())
+        .or_else(|| win.primary_monitor().ok().flatten());
+
+    if let Some(mon) = target_monitor {
+        let mon_pos = mon.position();
+        let mon_size = mon.size();
+        let scale_factor = mon.scale_factor();
+
+        let mon_log_x = mon_pos.x as f64 / scale_factor;
+        let mon_log_y = mon_pos.y as f64 / scale_factor;
+        let mon_log_w = mon_size.width as f64 / scale_factor;
+        let mon_log_h = mon_size.height as f64 / scale_factor;
+
+        let click_log_x = click_pos.x / scale_factor;
+
+        let (tray_x, tray_y) = match rect.position {
+            tauri::Position::Physical(p) => (p.x as f64 / scale_factor, p.y as f64 / scale_factor),
+            tauri::Position::Logical(l) => (l.x, l.y),
+        };
+
+        let (tray_w, tray_h) = match rect.size {
+            tauri::Size::Physical(s) => (s.width as f64 / scale_factor, s.height as f64 / scale_factor),
+            tauri::Size::Logical(l) => (l.width, l.height),
+        };
+
+        // Determine logical window size (defined as 380x520 in config)
+        let (win_w, win_h) = if let Ok(size) = win.outer_size() {
+            let cur_scale = win
+                .current_monitor()
+                .ok()
+                .flatten()
+                .map(|m| m.scale_factor())
+                .unwrap_or(scale_factor);
+            (size.width as f64 / cur_scale, size.height as f64 / cur_scale)
+        } else {
+            (380.0, 520.0)
+        };
+
+        let tray_center_x = if tray_w > 0.0 {
+            tray_x + tray_w / 2.0
+        } else {
+            click_log_x
+        };
+
+        let mut target_x = tray_center_x - (win_w / 2.0);
+
+        // Constrain horizontally within the target monitor with margin
+        let margin = 8.0;
+        let min_x = mon_log_x + margin;
+        let max_x = mon_log_x + mon_log_w - win_w - margin;
+        if target_x < min_x {
+            target_x = min_x;
+        } else if target_x > max_x {
+            target_x = max_x;
+        }
+
+        // Position vertically directly below tray icon
+        let tray_bottom_y = if tray_h > 0.0 {
+            tray_y + tray_h
+        } else {
+            mon_log_y + 25.0
+        };
+
+        let gap = 4.0;
+        let mut target_y = tray_bottom_y + gap;
+
+        // Constrain vertically within target monitor bounds
+        let min_y = mon_log_y + 4.0;
+        let max_y = mon_log_y + mon_log_h - win_h - margin;
+        if target_y < min_y {
+            target_y = min_y;
+        } else if target_y > max_y {
+            target_y = max_y;
+        }
+
+        let _ = win.set_position(tauri::LogicalPosition::new(target_x, target_y));
+    } else {
+        let _ = win.as_ref().window().move_window_constrained(Position::TrayCenter);
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let ignore_blur = Arc::new(AtomicBool::new(false));
@@ -98,6 +204,13 @@ pub fn run() {
                         let _: () = msg_send![ns_window, setOpaque: NO];
                         let _: () = msg_send![ns_window, setHasShadow: NO];
                         let _: () = msg_send![ns_window, invalidateShadow];
+
+                        // Set collection behavior to allow moving across multiple monitors and spaces:
+                        // 1 << 0: NSWindowCollectionBehaviorCanJoinAllSpaces
+                        // 1 << 1: NSWindowCollectionBehaviorMoveToActiveSpace
+                        // 1 << 8: NSWindowCollectionBehaviorFullScreenAuxiliary
+                        let collection_behavior: usize = (1 << 0) | (1 << 1) | (1 << 8);
+                        let _: () = msg_send![ns_window, setCollectionBehavior: collection_behavior];
                     }
                 }
 
@@ -151,6 +264,8 @@ pub fn run() {
                     if let TrayIconEvent::Click {
                         button: MouseButton::Left,
                         button_state: MouseButtonState::Up,
+                        position,
+                        rect,
                         ..
                     } = event
                     {
@@ -181,7 +296,7 @@ pub fn run() {
                         if is_visible {
                             let _ = win.hide();
                         } else {
-                            let _ = win.as_ref().window().move_window(Position::TrayCenter);
+                            position_window_at_tray(&win, position, rect);
                             let _ = win.show();
                             let _ = win.set_focus();
                         }

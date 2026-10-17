@@ -87,6 +87,22 @@ Download the latest `.dmg` release from [GitHub Releases](https://github.com/ran
 
 ---
 
+### Option 3: PKG Installer (Double-Click Setup)
+
+Download `Limen_0.1.0_aarch64.pkg` from [GitHub Releases](https://github.com/ranajoy-dutta/limen/releases):
+
+1. Double-click the `.pkg` file.
+2. Follow the standard macOS installer prompts (*Continue* → *Install*).
+3. Limen will be automatically placed in `/Applications`.
+
+> **Note if Gatekeeper blocks opening on managed laptops:**
+> Right-click (or Control-click) the `.pkg` file and choose **Open**, then click **Open** in the dialog. Alternatively:
+> ```bash
+> xattr -d com.apple.quarantine Limen_0.1.0_aarch64.pkg
+> ```
+
+---
+
 ## Usage
 
 1. **Sign In**:
