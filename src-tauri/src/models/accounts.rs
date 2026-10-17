@@ -22,4 +22,6 @@ pub struct ActiveProfile {
     pub account_name: String,
     pub role_name: String,
     pub expires_at: DateTime<Utc>,
+    #[serde(default)]
+    pub is_default: bool,
 }

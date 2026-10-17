@@ -29,7 +29,10 @@ pub struct AppState {
 
 async fn run_background_watchdog(app_handle: tauri::AppHandle) {
     let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(10));
+    interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
     interval.tick().await;
+
+    let mut last_emitted_state: Option<SessionState> = None;
 
     loop {
         interval.tick().await;
@@ -40,7 +43,12 @@ async fn run_background_watchdog(app_handle: tauri::AppHandle) {
         // 1. Check and refresh SSO session
         match session_manager.check_and_refresh_session().await {
             Ok(new_state) => {
-                if let SessionState::Expired { .. } = new_state {
+                let state_changed = match &last_emitted_state {
+                    Some(prev) => prev != &new_state,
+                    None => true,
+                };
+                if state_changed {
+                    last_emitted_state = Some(new_state.clone());
                     let _ = app_handle.emit("limen://session-state-changed", &new_state);
                 }
             }
@@ -49,28 +57,41 @@ async fn run_background_watchdog(app_handle: tauri::AppHandle) {
             }
         }
 
-        // 2. If session is active, check and refresh active profiles
+        // 2. If session token is valid, check and refresh active profiles; otherwise clean up
         let current_tokens = session_manager.get_tokens().await;
-        if let Some(tokens) = current_tokens {
-            if tokens.expires_at > chrono::Utc::now() {
-                match crate::core::credentials::check_and_refresh_active_profiles(
-                    &tokens.access_token,
-                    &tokens.region,
-                )
-                .await
-                {
-                    Ok(refreshed) => {
-                        if refreshed {
-                            let _ = app_handle.emit("limen://profiles-changed", ());
-                        }
+        let is_token_valid = current_tokens
+            .as_ref()
+            .map(|t| t.expires_at > chrono::Utc::now())
+            .unwrap_or(false);
+
+        if is_token_valid {
+            let tokens = current_tokens.unwrap();
+            match crate::core::credentials::check_and_refresh_active_profiles(
+                &tokens.access_token,
+                &tokens.region,
+            )
+            .await
+            {
+                Ok(refreshed) => {
+                    if refreshed {
+                        let _ = app_handle.emit("limen://profiles-changed", ());
                     }
-                    Err(e) => {
-                        tracing::warn!("Watchdog error refreshing active profiles: {}", e);
-                    }
+                }
+                Err(e) => {
+                    tracing::warn!("Watchdog error refreshing active profiles: {}", e);
                 }
             }
         } else {
-            let _ = crate::core::credentials::clean_expired_active_profiles().await;
+            match crate::core::credentials::clean_expired_active_profiles().await {
+                Ok(cleaned) => {
+                    if cleaned {
+                        let _ = app_handle.emit("limen://profiles-changed", ());
+                    }
+                }
+                Err(e) => {
+                    tracing::warn!("Watchdog error cleaning expired active profiles: {}", e);
+                }
+            }
         }
     }
 }

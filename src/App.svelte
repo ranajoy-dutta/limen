@@ -39,6 +39,10 @@
   let errorMessage: string | null = $state(null);
   let copyFeedback: boolean = $state(false);
 
+  let isTokenExpired = $derived(
+    sessionState.status === 'Active' && new Date(sessionState.data.expires_at).getTime() <= Date.now()
+  );
+
   let isInitialized = false;
 
   $effect(() => {
@@ -289,7 +293,7 @@
     if (sessionState.status === 'Active') {
       await loadAccountsAndActiveProfiles();
     }
-    pollTimer = setInterval(fetchState, 1500);
+    pollTimer = setInterval(fetchState, 5000);
   });
 
   onDestroy(() => {
@@ -394,20 +398,15 @@
     </div>
 
     <div class="status-badge">
-      {#if sessionState.status === 'Active'}
-        {#if new Date(sessionState.data.expires_at).getTime() <= Date.now()}
-          <span class="status-dot error"></span>
-          <span>Expired</span>
-        {:else}
-          <span class="status-dot active"></span>
-          <span>Connected</span>
-        {/if}
+      {#if sessionState.status === 'Active' && !isTokenExpired}
+        <span class="status-dot active"></span>
+        <span>Connected</span>
       {:else if sessionState.status === 'AwaitingApproval' || sessionState.status === 'Registering' || sessionState.status === 'Refreshing'}
         <span class="status-dot pending"></span>
         <span>{sessionState.status}</span>
-      {:else if sessionState.status === 'Failed' || sessionState.status === 'Expired'}
+      {:else if sessionState.status === 'Failed' || sessionState.status === 'Expired' || isTokenExpired}
         <span class="status-dot error"></span>
-        <span>{sessionState.status}</span>
+        <span>Expired</span>
       {:else}
         <span class="status-dot"></span>
         <span>Offline</span>
@@ -547,7 +546,7 @@
         </button>
       </div>
 
-    {:else if sessionState.status === 'Active'}
+    {:else if sessionState.status === 'Active' && !isTokenExpired}
       <!-- Active Profiles Card (Multiple Simultaneous Profiles) -->
       {#if activeProfiles.length > 0}
         <div class="active-profiles-card">
@@ -863,13 +862,13 @@
         </div>
       </footer>
 
-    {:else if sessionState.status === 'Expired'}
+    {:else if sessionState.status === 'Expired' || isTokenExpired}
       <div class="card" style="text-align: center; padding: 24px 16px; display: flex; flex-direction: column; gap: 12px;">
         <div style="font-size: 14px; font-weight: 600; color: var(--warning);">
           Session Expired
         </div>
         <div style="font-size: 12px; color: var(--text-secondary);">
-          {sessionState.data.reason || 'Your AWS SSO session has expired. Please sign in again.'}
+          {(sessionState.status === 'Expired' ? sessionState.data.reason : null) || 'Your AWS SSO session has expired. Please sign in again.'}
         </div>
         <button class="primary-btn" onclick={handleLogin} disabled={isLoading}>
           {isLoading ? 'Signing In...' : 'Sign In Again'}

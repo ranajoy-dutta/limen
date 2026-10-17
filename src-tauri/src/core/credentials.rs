@@ -4,6 +4,9 @@ use chrono::{TimeZone, Utc};
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicU64, Ordering};
+
+static TEMP_FILE_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 fn aws_credentials_path() -> Result<PathBuf, LimenError> {
     let aws_dir = crate::core::storage::get_home_dir()?.join(".aws");
@@ -28,7 +31,8 @@ fn atomic_write_credentials_file(
     let parent = creds_file
         .parent()
         .ok_or_else(|| LimenError::internal("Missing credentials parent directory"))?;
-    let tmp_file = parent.join(format!(".credentials.tmp.{}", std::process::id()));
+    let seq = TEMP_FILE_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let tmp_file = parent.join(format!(".credentials.tmp.{}.{}", std::process::id(), seq));
 
     fs::write(&tmp_file, content).map_err(|e| LimenError::ConfigFile {
         path: tmp_file.display().to_string(),
@@ -228,8 +232,8 @@ pub async fn activate_role(
             );
             updated_lines.push(new_profile);
 
-            // If set_as_default is enabled, also append [default]
-            if set_as_default {
+            // If set_as_default is enabled and profile is not already "default", also append [default]
+            if set_as_default && profile_name != "default" {
                 let new_default = format!(
                     "[default]\naws_access_key_id = {access_key_id}\naws_secret_access_key = {secret_access_key}\naws_session_token = {session_token}\nregion = {region}"
                 );
@@ -244,12 +248,14 @@ pub async fn activate_role(
     .await
     .map_err(|e| LimenError::internal(format!("Join error writing AWS credentials: {e}")))??;
 
+    let is_default = set_as_default || target_profile == "default";
     let active_profile = ActiveProfile {
         profile_name: target_profile,
         account_id: account_id.to_string(),
         account_name: account_name.to_string(),
         role_name: role_name.to_string(),
         expires_at,
+        is_default,
     };
 
     // Save to active profiles map
@@ -336,10 +342,7 @@ pub async fn check_and_refresh_active_profiles(
     let now = Utc::now();
     let to_refresh: Vec<ActiveProfile> = raw
         .into_values()
-        .filter(|p| {
-            p.expires_at < now + chrono::Duration::minutes(5)
-                && p.expires_at > now - chrono::Duration::minutes(5)
-        })
+        .filter(|p| p.expires_at < now + chrono::Duration::minutes(5))
         .collect();
 
     if to_refresh.is_empty() {
@@ -348,7 +351,6 @@ pub async fn check_and_refresh_active_profiles(
 
     let mut any_refreshed = false;
     for profile in to_refresh {
-        let is_default = profile.profile_name == "default";
         match activate_role(
             access_token,
             region,
@@ -356,7 +358,7 @@ pub async fn check_and_refresh_active_profiles(
             &profile.account_name,
             &profile.role_name,
             Some(profile.profile_name.clone()),
-            is_default,
+            profile.is_default,
         )
         .await
         {
@@ -397,7 +399,6 @@ pub async fn refresh_all_active_profiles(
 
     let mut any_refreshed = false;
     for profile in to_refresh {
-        let is_default = profile.profile_name == "default";
         if activate_role(
             access_token,
             region,
@@ -405,7 +406,7 @@ pub async fn refresh_all_active_profiles(
             &profile.account_name,
             &profile.role_name,
             Some(profile.profile_name.clone()),
-            is_default,
+            profile.is_default,
         )
         .await
         .is_ok()

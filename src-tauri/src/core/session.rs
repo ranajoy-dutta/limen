@@ -40,16 +40,27 @@ impl SessionManager {
         let current_state = self.state.read().await.clone();
         if let SessionState::Active { expires_at, .. } = current_state {
             if expires_at <= Utc::now() {
-                let mut state_guard = self.state.write().await;
-                if let SessionState::Active {
-                    expires_at: exp, ..
-                } = *state_guard
-                {
-                    if exp <= Utc::now() {
-                        *state_guard = SessionState::Expired {
-                            reason: "Session expired. Please sign in again.".to_string(),
-                        };
-                        return state_guard.clone();
+                // Only transition to Expired if no refresh_token is available to attempt a refresh
+                let has_refresh = self
+                    .active_tokens
+                    .read()
+                    .await
+                    .as_ref()
+                    .map(|t| !t.refresh_token.is_empty())
+                    .unwrap_or(false);
+
+                if !has_refresh {
+                    let mut state_guard = self.state.write().await;
+                    if let SessionState::Active {
+                        expires_at: exp, ..
+                    } = *state_guard
+                    {
+                        if exp <= Utc::now() {
+                            *state_guard = SessionState::Expired {
+                                reason: "Session expired. Please sign in again.".to_string(),
+                            };
+                            return state_guard.clone();
+                        }
                     }
                 }
             }
@@ -63,9 +74,13 @@ impl SessionManager {
 
     pub async fn check_and_refresh_session(&self) -> Result<SessionState, LimenError> {
         let current_state = self.get_state().await;
-        let is_active = matches!(current_state, SessionState::Active { .. });
-        if !is_active {
-            return Ok(current_state);
+        match current_state {
+            SessionState::LoggedOut
+            | SessionState::Registering
+            | SessionState::AwaitingApproval { .. } => {
+                return Ok(current_state);
+            }
+            _ => {}
         }
 
         let tokens = match self.get_tokens().await {
