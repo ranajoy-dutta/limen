@@ -87,3 +87,12 @@ jobs:
           generate_release_notes: true
           draft: false
           prerelease: false
+
+      - name: Update Homebrew Tap
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          SHA256=$(grep "Limen_${VERSION}_aarch64.dmg" release-artifacts/SHA256SUMS.txt | awk '{print $1}')
+          node scripts/update-homebrew-tap.js "${VERSION}" "${SHA256}"
+
