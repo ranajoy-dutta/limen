@@ -211,3 +211,36 @@ fn test_error_serialization_discriminated_union() {
     let not_auth_json = serde_json::to_string(&not_auth).unwrap();
     assert_eq!(not_auth_json, "{\"kind\":\"NotAuthenticated\"}");
 }
+
+#[tokio::test]
+async fn test_watchdog_auto_refresh_when_nearing_expiry() {
+    let mock_client = Arc::new(MockSsoOidcClient::new(0));
+    let ignore_blur = Arc::new(AtomicBool::new(false));
+    let session_mgr = SessionManager::new(
+        Some(Arc::clone(&mock_client) as Arc<dyn limen_lib::core::aws_client::SsoOidcClient>),
+        ignore_blur,
+    );
+
+    session_mgr
+        .begin_login(
+            "https://test-portal.awsapps.com/start".to_string(),
+            "us-east-1".to_string(),
+        )
+        .await
+        .expect("begin_login should succeed");
+
+    for _ in 0..50 {
+        if let SessionState::Active { .. } = session_mgr.get_state().await {
+            break;
+        }
+        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    }
+
+    assert!(matches!(session_mgr.get_state().await, SessionState::Active { .. }));
+
+    let state = session_mgr
+        .check_and_refresh_session()
+        .await
+        .expect("check_and_refresh should succeed");
+    assert!(matches!(state, SessionState::Active { .. }));
+}

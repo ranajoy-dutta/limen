@@ -37,11 +37,76 @@ impl SessionManager {
     }
 
     pub async fn get_state(&self) -> SessionState {
-        self.state.read().await.clone()
+        let current_state = self.state.read().await.clone();
+        if let SessionState::Active { expires_at, .. } = current_state {
+            if expires_at <= Utc::now() {
+                let mut state_guard = self.state.write().await;
+                if let SessionState::Active { expires_at: exp, .. } = *state_guard {
+                    if exp <= Utc::now() {
+                        *state_guard = SessionState::Expired {
+                            reason: "Session expired. Please sign in again.".to_string(),
+                        };
+                        return state_guard.clone();
+                    }
+                }
+            }
+        }
+        current_state
     }
 
     pub async fn get_tokens(&self) -> Option<SsoTokens> {
         self.active_tokens.read().await.clone()
+    }
+
+    pub async fn check_and_refresh_session(&self) -> Result<SessionState, LimenError> {
+        let current_state = self.get_state().await;
+        let is_active = matches!(current_state, SessionState::Active { .. });
+        if !is_active {
+            return Ok(current_state);
+        }
+
+        let tokens = match self.get_tokens().await {
+            Some(t) => t,
+            None => return Ok(current_state),
+        };
+
+        let now = Utc::now();
+        // Proactively refresh if token expires within 5 minutes or has already expired
+        if tokens.expires_at < now + Duration::minutes(5) {
+            if !tokens.refresh_token.is_empty() {
+                tracing::info!(
+                    expires_at = %tokens.expires_at,
+                    "SSO token nearing expiry or expired; watchdog attempting proactive refresh"
+                );
+                match self.refresh_active_session().await {
+                    Ok(()) => {
+                        tracing::info!("SSO token successfully auto-refreshed by watchdog");
+                        return Ok(self.get_state().await);
+                    }
+                    Err(e) => {
+                        tracing::warn!("Watchdog proactive refresh failed: {}", e);
+                        if tokens.expires_at <= now {
+                            *self.active_tokens.write().await = None;
+                            let expired_state = SessionState::Expired {
+                                reason: "Session expired. Please sign in again.".to_string(),
+                            };
+                            *self.state.write().await = expired_state.clone();
+                            return Ok(expired_state);
+                        }
+                    }
+                }
+            } else if tokens.expires_at <= now {
+                tracing::info!("SSO token expired with no refresh token available");
+                *self.active_tokens.write().await = None;
+                let expired_state = SessionState::Expired {
+                    reason: "Session expired. Please sign in again.".to_string(),
+                };
+                *self.state.write().await = expired_state.clone();
+                return Ok(expired_state);
+            }
+        }
+
+        Ok(self.get_state().await)
     }
 
     pub async fn ensure_active_token(&self) -> Result<SsoTokens, LimenError> {
@@ -70,6 +135,15 @@ impl SessionManager {
                     return Ok(refreshed);
                 }
             }
+        }
+
+        // If the token has expired and could not be refreshed, fail explicitly
+        if current.expires_at <= Utc::now() {
+            *self.active_tokens.write().await = None;
+            *self.state.write().await = SessionState::Expired {
+                reason: "Session expired. Please sign in again.".to_string(),
+            };
+            return Err(LimenError::SessionExpired);
         }
 
         Ok(current)

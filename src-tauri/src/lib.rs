@@ -16,6 +16,8 @@ use tauri::{Manager, WindowEvent};
 use tauri_plugin_positioner::{Position, WindowExt};
 
 use crate::models::accounts::ActiveProfile;
+use crate::models::auth::SessionState;
+use tauri::Emitter;
 use tokio::sync::RwLock;
 
 pub struct AppState {
@@ -23,6 +25,54 @@ pub struct AppState {
     pub active_profile: Arc<RwLock<Option<ActiveProfile>>>,
     pub ignore_blur: Arc<AtomicBool>,
     pub last_blur_time: Arc<Mutex<Option<Instant>>>,
+}
+
+async fn run_background_watchdog(app_handle: tauri::AppHandle) {
+    let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(10));
+    interval.tick().await;
+
+    loop {
+        interval.tick().await;
+
+        let state = app_handle.state::<AppState>();
+        let session_manager = &state.session_manager;
+
+        // 1. Check and refresh SSO session
+        match session_manager.check_and_refresh_session().await {
+            Ok(new_state) => {
+                if let SessionState::Expired { .. } = new_state {
+                    let _ = app_handle.emit("limen://session-state-changed", &new_state);
+                }
+            }
+            Err(e) => {
+                tracing::warn!("Watchdog error during session check: {}", e);
+            }
+        }
+
+        // 2. If session is active, check and refresh active profiles
+        let current_tokens = session_manager.get_tokens().await;
+        if let Some(tokens) = current_tokens {
+            if tokens.expires_at > chrono::Utc::now() {
+                match crate::core::credentials::check_and_refresh_active_profiles(
+                    &tokens.access_token,
+                    &tokens.region,
+                )
+                .await
+                {
+                    Ok(refreshed) => {
+                        if refreshed {
+                            let _ = app_handle.emit("limen://profiles-changed", ());
+                        }
+                    }
+                    Err(e) => {
+                        tracing::warn!("Watchdog error refreshing active profiles: {}", e);
+                    }
+                }
+            }
+        } else {
+            let _ = crate::core::credentials::clean_expired_active_profiles().await;
+        }
+    }
 }
 
 #[tauri::command]
@@ -192,6 +242,12 @@ pub fn run() {
             let session_manager = app.state::<AppState>().session_manager.clone();
             tauri::async_runtime::spawn(async move {
                 let _ = session_manager.restore_last_session().await;
+            });
+
+            // Start proactive background watchdog for session and active profile credentials
+            let app_handle_watchdog = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                run_background_watchdog(app_handle_watchdog).await;
             });
 
             // Configure macOS Accessory activation policy (no Dock icon, no App Menu)

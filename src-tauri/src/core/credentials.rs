@@ -303,3 +303,132 @@ pub async fn deactivate_role(profile_name: &str) -> Result<(), LimenError> {
 
     Ok(())
 }
+
+pub async fn load_raw_active_profiles() -> Result<HashMap<String, ActiveProfile>, LimenError> {
+    let path = active_profiles_path()?;
+    if !path.exists() {
+        return Ok(HashMap::new());
+    }
+
+    tokio::task::spawn_blocking(move || {
+        let content = fs::read_to_string(&path).map_err(|e| LimenError::ConfigFile {
+            path: path.display().to_string(),
+            reason: e.to_string(),
+        })?;
+
+        let map: HashMap<String, ActiveProfile> =
+            serde_json::from_str(&content).unwrap_or_default();
+        Ok(map)
+    })
+    .await
+    .map_err(|e| LimenError::internal(format!("Join error reading raw active profiles: {e}")))?
+}
+
+pub async fn check_and_refresh_active_profiles(
+    access_token: &str,
+    region: &str,
+) -> Result<bool, LimenError> {
+    let raw = load_raw_active_profiles().await?;
+    if raw.is_empty() {
+        return Ok(false);
+    }
+
+    let now = Utc::now();
+    let to_refresh: Vec<ActiveProfile> = raw
+        .into_values()
+        .filter(|p| {
+            p.expires_at < now + chrono::Duration::minutes(5)
+                && p.expires_at > now - chrono::Duration::minutes(5)
+        })
+        .collect();
+
+    if to_refresh.is_empty() {
+        return Ok(false);
+    }
+
+    let mut any_refreshed = false;
+    for profile in to_refresh {
+        let is_default = profile.profile_name == "default";
+        match activate_role(
+            access_token,
+            region,
+            &profile.account_id,
+            &profile.account_name,
+            &profile.role_name,
+            Some(profile.profile_name.clone()),
+            is_default,
+        )
+        .await
+        {
+            Ok(_) => {
+                tracing::info!(
+                    profile = %profile.profile_name,
+                    "Watchdog proactively refreshed credentials for active profile"
+                );
+                any_refreshed = true;
+            }
+            Err(e) => {
+                tracing::warn!(
+                    profile = %profile.profile_name,
+                    error = ?e,
+                    "Watchdog failed to refresh credentials for active profile"
+                );
+            }
+        }
+    }
+
+    Ok(any_refreshed)
+}
+
+pub async fn refresh_all_active_profiles(
+    access_token: &str,
+    region: &str,
+) -> Result<bool, LimenError> {
+    let raw = load_raw_active_profiles().await?;
+    if raw.is_empty() {
+        return Ok(false);
+    }
+
+    let now = Utc::now();
+    let to_refresh: Vec<ActiveProfile> = raw
+        .into_values()
+        .filter(|p| p.expires_at > now - chrono::Duration::hours(1))
+        .collect();
+
+    let mut any_refreshed = false;
+    for profile in to_refresh {
+        let is_default = profile.profile_name == "default";
+        if let Ok(_) = activate_role(
+            access_token,
+            region,
+            &profile.account_id,
+            &profile.account_name,
+            &profile.role_name,
+            Some(profile.profile_name.clone()),
+            is_default,
+        )
+        .await
+        {
+            any_refreshed = true;
+        }
+    }
+
+    Ok(any_refreshed)
+}
+
+pub async fn clean_expired_active_profiles() -> Result<bool, LimenError> {
+    let raw = load_raw_active_profiles().await?;
+    let now = Utc::now();
+    let initial_len = raw.len();
+    let valid: HashMap<String, ActiveProfile> = raw
+        .into_iter()
+        .filter(|(_, p)| p.expires_at > now)
+        .collect();
+
+    if valid.len() != initial_len {
+        save_active_profiles(&valid).await?;
+        return Ok(true);
+    }
+
+    Ok(false)
+}

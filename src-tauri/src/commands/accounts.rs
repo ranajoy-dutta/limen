@@ -22,6 +22,10 @@ pub async fn get_accounts(app_state: State<'_, AppState>) -> Result<Vec<Account>
 pub async fn refresh_accounts(app_state: State<'_, AppState>) -> Result<Vec<Account>, LimenError> {
     let tokens = app_state.session_manager.ensure_active_token().await?;
     let start_url_hash = storage::hash_start_url(&tokens.start_url);
+
+    // Also refresh credentials for any currently active profiles
+    let _ = credentials::refresh_all_active_profiles(&tokens.access_token, &tokens.region).await;
+
     discovery::fetch_accounts(&tokens.access_token, &tokens.region, &start_url_hash).await
 }
 
