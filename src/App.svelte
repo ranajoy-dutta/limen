@@ -32,7 +32,7 @@
     expires_at: string;
   }
 
-  let sessionState: SessionState = $state({ status: 'LoggedOut' });
+  let sessionState = $state<SessionState>({ status: 'LoggedOut' });
   let startUrl: string = $state('');
   let region: string = $state('us-east-1');
   let isLoading: boolean = $state(false);
@@ -40,7 +40,12 @@
   let copyFeedback: boolean = $state(false);
 
   let isTokenExpired = $derived(
-    sessionState.status === 'Active' && new Date(sessionState.data.expires_at).getTime() <= Date.now()
+    Boolean(
+      (sessionState as SessionState).status === 'Active' &&
+        new Date(
+          (sessionState as Extract<SessionState, { status: 'Active' }>).data?.expires_at
+        ).getTime() <= Date.now()
+    )
   );
 
   let isInitialized = false;
