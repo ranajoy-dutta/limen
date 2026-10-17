@@ -41,23 +41,42 @@ jobs:
       - name: Build Tauri macOS application
         run: npx tauri build
 
+      - name: Build PKG Installer
+        run: |
+          mkdir -p release-artifacts
+          cp src-tauri/target/release/bundle/dmg/*.dmg release-artifacts/
+          VERSION="${GITHUB_REF_NAME#v}"
+          pkgbuild --component "src-tauri/target/release/bundle/macos/Limen.app" \
+                   --install-location "/Applications" \
+                   --version "${VERSION}" \
+                   "release-artifacts/Limen_${VERSION}_aarch64.pkg"
+
       - name: Generate SHA-256 Checksums
         run: |
-          cd src-tauri/target/release/bundle/dmg
-          shasum -a 256 *.dmg > SHA256SUMS.txt
+          cd release-artifacts
+          shasum -a 256 *.dmg *.pkg > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
       - name: Attest Build Provenance (SLSA)
         uses: actions/attest-build-provenance@v4
         with:
-          subject-path: 'src-tauri/target/release/bundle/dmg/*.dmg'
+          subject-path: |
+            release-artifacts/*.dmg
+            release-artifacts/*.pkg
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v3
         with:
           files: |
-            src-tauri/target/release/bundle/dmg/*.dmg
-            src-tauri/target/release/bundle/dmg/SHA256SUMS.txt
+            release-artifacts/*.dmg
+            release-artifacts/*.pkg
+            release-artifacts/SHA256SUMS.txt
+          body: |
+            > **macOS Gatekeeper Notice:**
+            > If macOS blocks opening the unsigned installer, right-click (or Control-click) the `.pkg`/`.dmg` and choose **Open**, approve via **System Settings > Privacy & Security > Open Anyway**, or run:
+            > ```bash
+            > xattr -d com.apple.quarantine Limen_*.pkg
+            > ```
           generate_release_notes: true
           draft: false
           prerelease: false
