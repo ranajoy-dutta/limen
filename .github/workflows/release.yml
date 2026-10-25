@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*.*.*'
+      - 'v*.*.*-*'
 
 permissions:
   contents: write
@@ -71,6 +72,26 @@ jobs:
             release-artifacts/*.dmg
             release-artifacts/*.pkg
 
+      - name: Determine Pre-release Status
+        id: check-prerelease
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          IS_PRERELEASE="false"
+          if [[ "${GITHUB_REF_NAME}" == *-* ]]; then
+            IS_PRERELEASE="true"
+          fi
+
+          if [ "$IS_PRERELEASE" = "false" ]; then
+            GH_PRERELEASE=$(gh release view "${GITHUB_REF_NAME}" --json isPrerelease -q .isPrerelease 2>/dev/null || echo "false")
+            if [ "$GH_PRERELEASE" = "true" ]; then
+              IS_PRERELEASE="true"
+            fi
+          fi
+
+          echo "is_prerelease=${IS_PRERELEASE}"
+          echo "is_prerelease=${IS_PRERELEASE}" >> "$GITHUB_OUTPUT"
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v3
         with:
@@ -86,9 +107,10 @@ jobs:
             > ```
           generate_release_notes: true
           draft: false
-          prerelease: false
+          prerelease: ${{ steps.check-prerelease.outputs.is_prerelease == 'true' }}
 
       - name: Update Homebrew Tap
+        if: steps.check-prerelease.outputs.is_prerelease != 'true'
         env:
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
