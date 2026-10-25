@@ -4,18 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Limen - macOS Mock Environment Preview</title>
-  <!-- Apple San Francisco & Inter Web Fonts for 100% authentic macOS typography -->
+  <!-- Apple San Francisco & Inter Web Fonts for authentic macOS typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.cdnfonts.com/css/sf-pro-display" rel="stylesheet">
   <style>
     /* =============================================
-       macOS Tahoe — Liquid Glass Theme
-       Full authentic redesign for Limen Mock
+       macOS Tahoe — Liquid Glass Environment Shell
+       Mounts the ACTUAL production Svelte 5 application!
     =============================================== */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
     * {
       box-sizing: border-box;
       margin: 0;
@@ -28,27 +26,13 @@
 
     :root {
       --font-stack: 'SF Pro Text', 'SF Pro Display', 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-      /* Tahoe Glass tokens */
       --glass-bg: rgba(255, 255, 255, 0.12);
       --glass-bg-dark: rgba(0, 0, 0, 0.25);
       --glass-border: rgba(255, 255, 255, 0.28);
       --glass-border-dark: rgba(255, 255, 255, 0.14);
       --glass-blur: blur(60px) saturate(280%);
       --glass-blur-heavy: blur(80px) saturate(300%);
-      /* Limen popover tokens */
-      --bg-popover: rgba(18, 18, 28, 0.82);
-      --bg-card: rgba(255, 255, 255, 0.07);
-      --bg-card-hover: rgba(255, 255, 255, 0.12);
-      --bg-card-active: rgba(16, 185, 129, 0.12);
-      --border-subtle: rgba(255, 255, 255, 0.1);
-      --border-focus: rgba(130, 170, 255, 0.7);
-      --accent-color: #6ea8fe;
-      --accent-hover: #4a90f5;
-      --text-primary: #ffffff;
-      --text-secondary: rgba(255, 255, 255, 0.65);
-      --text-muted: rgba(255, 255, 255, 0.38);
       --success: #30d158;
-      --success-glow: rgba(48, 209, 88, 0.4);
       --danger: #ff453a;
       --warning: #ffd60a;
     }
@@ -62,11 +46,10 @@
       position: relative;
     }
 
-    /* ─── macOS Tahoe Wallpaper (Vibrant, Colorful) ─── */
+    /* ─── macOS Tahoe Wallpaper ─── */
     .macos-desktop {
       position: absolute;
       inset: 0;
-      /* Tahoe signature: warm-to-cool vivid gradient */
       background:
         radial-gradient(ellipse at 15% 85%, rgba(255, 100, 50, 0.7) 0%, transparent 45%),
         radial-gradient(ellipse at 85% 10%, rgba(80, 40, 200, 0.8) 0%, transparent 45%),
@@ -79,7 +62,6 @@
       overflow: hidden;
     }
 
-    /* Tahoe light streaks / aurora ribbons */
     .tahoe-aurora {
       position: absolute;
       inset: 0;
@@ -98,832 +80,265 @@
         rgba(255, 80, 150, 0.2),
         rgba(30, 150, 255, 0.25),
         rgba(80, 220, 200, 0.15),
-        rgba(120, 60, 255, 0.3));
+        rgba(120, 60, 255, 0.3)
+      );
       filter: blur(80px);
-      animation: auroraShift 18s ease-in-out infinite alternate;
-    }
-    .tahoe-aurora::after {
-      content: '';
-      position: absolute;
-      bottom: -20%;
-      right: -10%;
-      width: 70vw;
-      height: 70vh;
-      background: conic-gradient(from 30deg at 50% 50%,
-        rgba(255, 140, 0, 0.25),
-        rgba(200, 40, 255, 0.2),
-        rgba(0, 100, 255, 0.2),
-        rgba(255, 140, 0, 0.25));
-      filter: blur(100px);
-      animation: auroraShift 22s ease-in-out infinite alternate-reverse;
-    }
-    @keyframes auroraShift {
-      0%   { transform: translate(0, 0) rotate(0deg) scale(1); }
-      33%  { transform: translate(5vw, -3vh) rotate(8deg) scale(1.08); }
-      66%  { transform: translate(-4vw, 5vh) rotate(-5deg) scale(0.95); }
-      100% { transform: translate(3vw, 2vh) rotate(12deg) scale(1.05); }
+      border-radius: 50%;
+      animation: auroraRotate 28s linear infinite;
     }
 
-    /* ─── macOS Tahoe Menu Bar — Liquid Glass ─── */
+    @keyframes auroraRotate {
+      0%   { transform: rotate(0deg) scale(1); }
+      50%  { transform: rotate(180deg) scale(1.08); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+
+    /* ─── macOS Top Menu Bar ─── */
     .macos-menubar {
-      position: relative;
-      z-index: 1000;
-      height: 24px;
-      padding: 0 8px 0 10px;
+      height: 28px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.18);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-bottom: 0.5px solid rgba(255, 255, 255, 0.28);
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.15);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      /* Liquid glass: translucent with authentic blur */
-      background: rgba(255, 255, 255, 0.10);
-      backdrop-filter: blur(50px) saturate(260%) brightness(1.06);
-      -webkit-backdrop-filter: blur(50px) saturate(260%) brightness(1.06);
-      /* Iridescent shimmer border — Tahoe signature */
-      border-bottom: 0.5px solid rgba(255, 255, 255, 0.20);
-      box-shadow:
-        0 0.5px 0 rgba(255, 255, 255, 0.12),
-        inset 0 0.5px 0 rgba(255, 255, 255, 0.22),
-        0 2px 14px rgba(0, 0, 0, 0.22);
-      font-size: 13px;
-      font-weight: 400;
+      padding: 0 12px;
+      z-index: 9999;
       color: rgba(255, 255, 255, 0.95);
-      letter-spacing: -0.015em;
-    }
-    /* Iridescent shimmer overlay on menubar */
-    .macos-menubar::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(90deg,
-        rgba(120, 60, 255, 0.04) 0%,
-        rgba(255, 100, 150, 0.04) 25%,
-        rgba(60, 180, 255, 0.06) 50%,
-        rgba(100, 255, 200, 0.04) 75%,
-        rgba(200, 100, 255, 0.04) 100%);
-      pointer-events: none;
+      font-size: 13px;
+      font-weight: 500;
+      flex-shrink: 0;
     }
 
-    .menubar-left {
+    .menubar-left,
+    .menubar-right {
       display: flex;
       align-items: center;
-      gap: 0px;
-      position: relative;
-      z-index: 1;
+      height: 100%;
     }
 
     .apple-logo-btn {
       display: flex;
       align-items: center;
-      justify-content: center;
-      height: 20px;
       padding: 0 8px;
-      border-radius: 4px;
-      cursor: default;
-      transition: background 0.12s;
-    }
-    .apple-logo-btn:hover { background: rgba(255,255,255,0.16); }
-
-    .menubar-item {
-      cursor: default;
-      font-size: 13px;
-      padding: 1px 8px;
-      border-radius: 4px;
-      color: rgba(255, 255, 255, 0.94);
-      transition: background 0.12s;
-      line-height: 20px;
-    }
-    .menubar-item:hover { background: rgba(255,255,255,0.16); }
-    .menubar-item.active { font-weight: 700; }
-
-    .menubar-right {
-      display: flex;
-      align-items: center;
-      gap: 1px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .menubar-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
       height: 20px;
-      padding: 0 5px;
-      border-radius: 4px;
       cursor: default;
-      color: rgba(255, 255, 255, 0.94);
-      font-size: 12.5px;
-      letter-spacing: -0.01em;
-      transition: background 0.12s;
-      background: transparent;
-      border: none;
-      position: relative;
-    }
-    .menubar-btn:hover { background: rgba(255,255,255,0.18); }
-    .menubar-btn.is-active { background: rgba(255,255,255,0.22); }
-
-    .menubar-clock {
-      padding: 0 7px;
-      height: 20px;
-      display: flex;
-      align-items: center;
-      font-size: 12.5px;
-      font-weight: 400;
-      color: rgba(255, 255, 255, 0.94);
-      letter-spacing: -0.01em;
       border-radius: 4px;
-      cursor: default;
-      transition: background 0.12s;
-      white-space: pre;
-    }
-    .menubar-clock:hover { background: rgba(255,255,255,0.18); }
-
-    .battery-group {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 0 5px;
-      height: 20px;
-      border-radius: 4px;
-      transition: background 0.12s;
-      cursor: default;
-    }
-    .battery-group:hover { background: rgba(255,255,255,0.18); }
-    .battery-pct-label {
-      font-size: 12px;
-      font-weight: 500;
-      letter-spacing: -0.01em;
-      color: rgba(255, 255, 255, 0.94);
-    }
-
-    /* ─── Limen Tray Status Item ─── */
-    .limen-tray-item { position: relative; }
-
-    .limen-tray-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 22px;
-      min-width: 26px;
-      padding: 0 5px;
-      background: transparent;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      color: #ffffff;
       transition: background 0.15s;
     }
-    .limen-tray-btn:hover,
-    .limen-tray-btn.is-active { background: rgba(255,255,255,0.2); }
+    .apple-logo-btn:hover { background: rgba(255, 255, 255, 0.18); }
+
+    .menubar-item {
+      padding: 0 9px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      cursor: default;
+      border-radius: 4px;
+      transition: background 0.15s;
+      letter-spacing: -0.01em;
+    }
+    .menubar-item.active { font-weight: 600; }
+    .menubar-item:hover { background: rgba(255, 255, 255, 0.18); }
+
+    .menubar-btn {
+      height: 22px;
+      padding: 0 6px;
+      display: flex;
+      align-items: center;
+      cursor: default;
+      border-radius: 4px;
+      transition: background 0.15s;
+      color: rgba(255, 255, 255, 0.95);
+      font-size: 12px;
+      background: none;
+      border: none;
+    }
+    .menubar-btn:hover { background: rgba(255, 255, 255, 0.18); }
+
+    /* ─── Limen Tray Button & Dot ─── */
+    .limen-tray-item {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .limen-tray-btn {
+      padding: 0 8px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .limen-tray-btn.is-active,
+    .limen-tray-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
 
     .tray-icon-wrapper {
       position: relative;
-      display: inline-flex;
+      display: flex;
       align-items: center;
       justify-content: center;
-      width: 16px;
-      height: 16px;
+      width: 17px;
+      height: 17px;
     }
 
-    /* Status dot on the menu bar icon */
     .menubar-status-dot {
       position: absolute;
       bottom: -1px;
       right: -2px;
-      width: 5.5px;
-      height: 5.5px;
+      width: 6.5px;
+      height: 6.5px;
       border-radius: 50%;
-      border: 1.2px solid rgba(0, 0, 0, 0.55);
-      box-sizing: border-box;
-      pointer-events: none;
-      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      border: 1px solid rgba(0, 0, 0, 0.6);
+      background: #888;
+      transition: background-color 0.25s, box-shadow 0.25s;
     }
-    .menubar-status-dot.active   { background: #30d158; box-shadow: 0 0 4px rgba(48,209,88,0.9); }
-    .menubar-status-dot.refreshing { background: #ffd60a; box-shadow: 0 0 4px rgba(255,214,10,0.9); animation: dotPulse 1.4s ease-in-out infinite; }
-    .menubar-status-dot.expired  { background: #ff453a; box-shadow: 0 0 4px rgba(255,69,58,0.9); }
-
-    @keyframes dotPulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
+    .menubar-status-dot.active {
+      background: var(--success);
+      box-shadow: 0 0 5px rgba(48, 209, 88, 0.7);
+    }
+    .menubar-status-dot.refreshing {
+      background: var(--warning);
+      box-shadow: 0 0 5px rgba(255, 214, 10, 0.7);
+      animation: pulse 1.2s infinite ease-in-out;
+    }
+    .menubar-status-dot.expired {
+      background: var(--danger);
+      box-shadow: 0 0 5px rgba(255, 69, 58, 0.6);
     }
 
-    /* ─── Tahoe Glass Context Menu ─── */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    /* Context menu */
     .macos-context-menu {
       position: absolute;
-      top: 30px;
-      right: 0;
-      width: 148px;
-      background: rgba(40, 40, 58, 0.72);
-      backdrop-filter: blur(50px) saturate(280%);
-      -webkit-backdrop-filter: blur(50px) saturate(280%);
-      border: 0.5px solid rgba(255, 255, 255, 0.22);
-      border-radius: 12px;
-      padding: 5px;
-      box-shadow:
-        0 20px 50px rgba(0,0,0,0.6),
-        0 4px 12px rgba(0,0,0,0.3),
-        inset 0 1px 0 rgba(255,255,255,0.12);
+      top: 26px;
+      left: 0;
+      min-width: 150px;
+      background: rgba(30, 30, 35, 0.92);
+      backdrop-filter: blur(40px) saturate(220%);
+      -webkit-backdrop-filter: blur(40px) saturate(220%);
+      border: 0.5px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55);
+      padding: 4px;
+      z-index: 10001;
       display: none;
-      z-index: 2000;
-      flex-direction: column;
     }
-    .macos-context-menu.visible {
-      display: flex;
-      animation: menuPop 0.14s cubic-bezier(0.2, 0.9, 0.3, 1.2);
-    }
-    @keyframes menuPop {
-      from { opacity: 0; transform: scale(0.92) translateY(-6px); }
-      to   { opacity: 1; transform: scale(1) translateY(0); }
-    }
-
+    .macos-context-menu.visible { display: flex; flex-direction: column; }
     .context-menu-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 6px 10px;
-      font-size: 13px;
+      padding: 5px 10px;
+      font-size: 12.5px;
       font-weight: 400;
-      color: rgba(255,255,255,0.92);
-      border-radius: 7px;
-      cursor: pointer;
-      background: transparent;
+      color: rgba(255, 255, 255, 0.92);
+      border-radius: 5px;
+      cursor: default;
+      background: none;
       border: none;
       width: 100%;
       text-align: left;
-      transition: background 0.1s;
     }
     .context-menu-item:hover {
-      background: rgba(100, 140, 255, 0.72);
-      color: #fff;
+      background: #007aff;
+      color: white;
     }
     .context-menu-shortcut {
-      font-size: 12px;
-      color: rgba(255,255,255,0.45);
+      font-size: 11px;
+      opacity: 0.7;
     }
-    .context-menu-item:hover .context-menu-shortcut { color: rgba(255,255,255,0.85); }
     .context-menu-separator {
       height: 0.5px;
-      background: rgba(255,255,255,0.14);
+      background: rgba(255, 255, 255, 0.15);
       margin: 3px 6px;
     }
 
-    /* ─── Limen Popover (Liquid Glass shell) ─── */
+    .battery-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11.5px;
+    }
+    .battery-pct-label { font-weight: 500; }
+    .menubar-clock {
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      padding: 0 7px;
+    }
+
+    /* ─── Popover Anchor (Simulates Tauri Positioner) ─── */
     .popover-anchor {
       position: absolute;
       top: 32px;
-      right: auto;
-      z-index: 1500;
+      z-index: 1000;
+      filter: drop-shadow(0 24px 48px rgba(0, 0, 0, 0.75)) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
+      border-radius: 14px;
     }
-    .popover-container {
+
+    .limen-app-frame {
       width: 380px;
       height: 520px;
-      display: flex;
-      flex-direction: column;
-      background: rgba(14, 16, 26, 0.78);
-      backdrop-filter: blur(70px) saturate(280%);
-      -webkit-backdrop-filter: blur(70px) saturate(280%);
-      border: 0.5px solid rgba(255,255,255,0.16);
-      border-radius: 16px;
-      overflow: hidden;
       box-sizing: border-box;
-      box-shadow:
-        0 0 0 0.5px rgba(255,255,255,0.06),
-        0 24px 64px rgba(0,0,0,0.75),
-        0 8px 24px rgba(0,0,0,0.4),
-        inset 0 1px 0 rgba(255,255,255,0.08);
-      animation: popoverFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-      color: var(--text-primary);
-    }
-    @keyframes popoverFadeIn {
-      from { opacity: 0; transform: translateY(-10px) scale(0.97); }
-      to   { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 9999px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
-
-    /* Popover Header */
-    .header {
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 0.5px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.03);
-      backdrop-filter: blur(20px);
-    }
-    .header-brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .brand-icon-wrapper {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .brand-icon-pill {
-      width: 24px;
-      height: 24px;
-      border-radius: 7px;
-      background: linear-gradient(135deg, #4f8ef7, #7c5cf6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 10px rgba(100, 130, 255, 0.5);
-    }
-    .brand-status-dot {
-      position: absolute;
-      bottom: -1.5px;
-      right: -1.5px;
-      width: 7.5px;
-      height: 7.5px;
-      border-radius: 50%;
-      border: 1.5px solid rgba(14, 16, 26, 0.95);
-      box-sizing: border-box;
-      pointer-events: none;
-      transition: background-color 0.3s, box-shadow 0.3s;
-    }
-    .brand-status-dot.active    { background: var(--success); box-shadow: 0 0 5px var(--success-glow); }
-    .brand-status-dot.refreshing{ background: var(--warning); box-shadow: 0 0 5px rgba(255,214,10,0.5); }
-    .brand-status-dot.expired   { background: var(--danger);  box-shadow: 0 0 5px rgba(255,69,58,0.4); }
-
-    .header-title {
-      font-weight: 600;
-      font-size: 13px;
-      letter-spacing: -0.01em;
-      color: rgba(255,255,255,0.96);
-    }
-
-    .status-badge {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      font-weight: 500;
-      padding: 3px 9px;
-      border-radius: 9999px;
-      background: rgba(255,255,255,0.07);
-      border: 0.5px solid rgba(255,255,255,0.1);
-    }
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--text-muted);
-    }
-    .status-dot.active  { background: var(--success); box-shadow: 0 0 8px var(--success-glow); }
-    .status-dot.pending { background: var(--warning); box-shadow: 0 0 8px rgba(255,214,10,0.5); }
-    .status-dot.error   { background: var(--danger); }
-
-    /* Content */
-    .content {
-      flex: 1;
-      padding: 14px 14px;
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-      gap: 10px;
-    }
-    .card {
-      background: rgba(255,255,255,0.05);
-      border: 0.5px solid rgba(255,255,255,0.1);
-      border-radius: 12px;
-      padding: 14px;
-    }
-
-    /* Active Profiles */
-    .active-profiles-card {
-      background: rgba(48, 209, 88, 0.07);
-      border: 0.5px solid rgba(48, 209, 88, 0.28);
-      border-radius: 10px;
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .active-profiles-header {
-      font-size: 10.5px;
-      font-weight: 600;
-      color: #30d158;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .active-profile-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      background: rgba(0,0,0,0.25);
-      border: 0.5px solid rgba(48, 209, 88, 0.2);
-      border-radius: 8px;
-      padding: 6px 10px;
-    }
-    .profile-tag {
-      font-family: ui-monospace, 'SF Mono', Menlo, monospace;
-      font-size: 11px;
-      font-weight: 700;
-      color: #5ee792;
-    }
-    .profile-role-subtext {
-      font-size: 10.5px;
-      color: var(--text-secondary);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 200px;
-    }
-    .profile-actions {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    /* Search */
-    .search-container {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .search-input-wrapper {
-      position: relative;
-      flex: 1;
-      display: flex;
-      align-items: center;
-    }
-    .search-icon {
-      position: absolute;
-      left: 9px;
-      color: var(--text-muted);
-      pointer-events: none;
-    }
-    .search-box {
-      width: 100%;
-      height: 28px;
-      padding-left: 28px;
-      padding-right: 24px;
-      background: rgba(255,255,255,0.06);
-      border: 0.5px solid rgba(255,255,255,0.12);
-      border-radius: 8px;
-      color: var(--text-primary);
-      font-size: 11.5px;
-      outline: none;
-      transition: border-color 0.15s, background 0.15s;
-    }
-    .search-box:focus {
-      border-color: rgba(130,170,255,0.6);
-      background: rgba(255,255,255,0.09);
-    }
-    .refresh-btn {
-      width: 28px;
-      height: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(255,255,255,0.05);
-      border: 0.5px solid rgba(255,255,255,0.1);
-      border-radius: 8px;
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s;
-    }
-    .refresh-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
-    .refresh-btn.is-spinning svg { animation: spin 0.8s linear infinite; }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
-
-    /* Accounts */
-    .account-card {
-      background: rgba(255,255,255,0.04);
-      border: 0.5px solid rgba(255,255,255,0.09);
-      border-radius: 10px;
-      overflow: hidden;
-      margin-bottom: 6px;
-    }
-    .account-header {
-      padding: 9px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      cursor: pointer;
-      background: rgba(255,255,255,0.02);
-      transition: background 0.12s;
-    }
-    .account-header:hover { background: rgba(255,255,255,0.07); }
-    .account-title {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      overflow: hidden;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .chevron-icon {
-      transition: transform 0.18s ease;
-      color: var(--text-muted);
-    }
-    .chevron-icon.is-expanded { transform: rotate(90deg); }
-    .account-name-text {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      color: rgba(255,255,255,0.9);
-    }
-    .roles-container {
-      padding: 8px 12px 10px 12px;
-      border-top: 0.5px solid rgba(255,255,255,0.06);
-      background: rgba(0,0,0,0.18);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .account-meta-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 10px;
-      color: var(--text-muted);
-      margin-bottom: 3px;
-    }
-    .copy-id-btn {
-      background: none;
-      border: none;
-      color: var(--accent-color);
-      font-size: 10px;
-      cursor: pointer;
-    }
-    .role-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 5px 8px;
-      background: rgba(255,255,255,0.03);
-      border: 0.5px solid rgba(255,255,255,0.06);
-      border-radius: 8px;
-      font-size: 11.5px;
-    }
-    .role-item:hover { background: rgba(255,255,255,0.07); }
-
-    /* Buttons */
-    .action-btn-mini {
-      height: 22px;
-      padding: 0 8px;
-      display: inline-flex;
-      align-items: center;
-      font-size: 10.5px;
-      font-weight: 500;
-      background: rgba(255,255,255,0.07);
-      border: 0.5px solid rgba(255,255,255,0.1);
-      border-radius: 6px;
-      color: var(--text-primary);
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-    .action-btn-mini:hover { background: rgba(255,255,255,0.14); }
-    .play-btn {
-      width: 22px;
-      height: 22px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(99, 160, 255, 0.75);
-      border: none;
-      border-radius: 6px;
-      color: white;
-      cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
-    }
-    .play-btn:hover { background: rgba(60, 130, 255, 0.9); }
-    .play-btn:active { transform: scale(0.94); }
-    .btn-remove-profile,
-    .play-btn.active-stop-btn {
-      width: 22px;
-      height: 22px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(255, 69, 58, 0.14);
-      border: 0.5px solid rgba(255, 69, 58, 0.35);
-      border-radius: 6px;
-      color: #ff6b61;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-    .btn-remove-profile:hover,
-    .play-btn.active-stop-btn:hover { background: rgba(255, 69, 58, 0.3); }
-    .profile-badge-btn {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-family: ui-monospace, 'SF Mono', Menlo, monospace;
-      font-size: 10px;
-      cursor: pointer;
-    }
-    .profile-badge-btn:hover { color: var(--text-primary); }
-
-    /* Footer */
-    .footer {
-      padding: 10px 16px;
-      border-top: 0.5px solid rgba(255,255,255,0.07);
-      background: rgba(255,255,255,0.02);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 11px;
-    }
-    .region-chip {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      color: var(--text-secondary);
-      font-size: 11px;
-    }
-    .btn-signout {
-      background: none;
-      border: none;
-      color: #ff6b61;
-      font-size: 11px;
-      cursor: pointer;
-      padding: 4px 8px;
-      border-radius: 5px;
-    }
-    .btn-signout:hover { background: rgba(255,69,58,0.1); }
-    .primary-btn {
-      height: 32px;
-      background: rgba(100, 150, 255, 0.7);
-      border: 0.5px solid rgba(150, 180, 255, 0.4);
-      border-radius: 8px;
-      color: white;
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s;
-      backdrop-filter: blur(10px);
-    }
-    .primary-btn:hover { background: rgba(80, 130, 255, 0.9); }
-
-    /* ─── About Window ─── */
-    .macos-about-window {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 290px;
-      background: rgba(30, 32, 50, 0.82);
-      backdrop-filter: blur(80px) saturate(300%);
-      -webkit-backdrop-filter: blur(80px) saturate(300%);
-      border: 0.5px solid rgba(255,255,255,0.2);
       border-radius: 14px;
-      box-shadow: 0 30px 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.12);
-      z-index: 3000;
-      display: none;
-      flex-direction: column;
       overflow: hidden;
-      animation: modalFade 0.15s ease-out;
-    }
-    .macos-about-window.visible { display: flex; }
-    @keyframes modalFade {
-      from { opacity: 0; transform: translate(-50%, -48%) scale(0.95); }
-      to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-    }
-    .about-window-header {
-      height: 28px;
-      background: rgba(255,255,255,0.04);
-      border-bottom: 0.5px solid rgba(255,255,255,0.08);
-      display: flex;
-      align-items: center;
-      padding: 0 12px;
-    }
-    .window-dots { display: flex; gap: 7px; }
-    .dot-close   { width: 12px; height: 12px; border-radius: 50%; background: #ff5f56; border: 1px solid #e0443e; cursor: pointer; }
-    .dot-minimize{ width: 12px; height: 12px; border-radius: 50%; background: #ffbd2e; border: 1px solid #dea123; }
-    .dot-maximize{ width: 12px; height: 12px; border-radius: 50%; background: #27c93f; border: 1px solid #1aab29; }
-    .about-window-body {
-      padding: 24px 22px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      gap: 8px;
-    }
-    .about-app-icon {
-      width: 68px;
-      height: 68px;
-      border-radius: 18px;
-      background: linear-gradient(135deg, #4f8ef7, #7c5cf6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 8px 24px rgba(100, 130, 255, 0.5);
-      margin-bottom: 4px;
-    }
-    .about-title   { font-size: 16px; font-weight: 700; color: #fff; }
-    .about-version { font-size: 11px; color: var(--text-muted); }
-    .about-desc    { font-size: 11.5px; color: var(--text-secondary); line-height: 1.5; margin-top: 4px; }
-    .about-copyright { font-size: 9.5px; color: var(--text-muted); margin-top: 8px; }
-
-    /* ─── macOS Tahoe Dock — Liquid Glass Shelf ─── */
-    .macos-dock-container {
-      position: absolute;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 7px 16px 5px 16px;
-      background: rgba(255,255,255,0.14);
-      backdrop-filter: blur(60px) saturate(300%);
-      -webkit-backdrop-filter: blur(60px) saturate(300%);
-      border-radius: 24px;
-      border: 0.5px solid rgba(255,255,255,0.32);
-      box-shadow:
-        0 20px 60px rgba(0,0,0,0.55),
-        inset 0 1px 0 rgba(255,255,255,0.4),
-        inset 0 -1px 0 rgba(0,0,0,0.1);
-      z-index: 90;
-    }
-    .dock-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      cursor: pointer;
-      position: relative;
-      transition: transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2);
-    }
-    .dock-item:hover { transform: translateY(-10px) scale(1.22); }
-    .dock-icon {
-      width: 48px;
-      height: 48px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.35));
-    }
-    .dock-dot {
-      width: 4px;
-      height: 4px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.8);
-      margin-top: 3px;
-    }
-    .dock-separator {
-      width: 0.5px;
-      height: 40px;
-      background: rgba(255,255,255,0.22);
-      margin: 0 2px;
     }
 
-    /* ─── Sim Controller ─── */
+    /* ─── Simulation Switcher Bar ─── */
     .sim-controller {
       position: absolute;
       bottom: 84px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(10, 12, 22, 0.75);
-      backdrop-filter: blur(40px) saturate(250%);
-      -webkit-backdrop-filter: blur(40px) saturate(250%);
-      border: 0.5px solid rgba(255,255,255,0.16);
-      border-radius: 30px;
+      background: rgba(18, 18, 28, 0.85);
+      backdrop-filter: blur(40px) saturate(220%);
+      -webkit-backdrop-filter: blur(40px) saturate(220%);
+      border: 0.5px solid rgba(255, 255, 255, 0.18);
+      border-radius: 40px;
       padding: 6px 14px;
       display: flex;
       align-items: center;
-      gap: 8px;
-      box-shadow: 0 12px 36px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08);
-      z-index: 250;
-      white-space: nowrap;
+      gap: 7px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+      z-index: 2000;
     }
     .sim-label {
       font-size: 10.5px;
       font-weight: 600;
-      color: rgba(255,255,255,0.45);
+      color: rgba(255, 255, 255, 0.45);
       text-transform: uppercase;
       letter-spacing: 0.06em;
+      margin-right: 4px;
     }
     .sim-pill {
       font-size: 11px;
       font-weight: 500;
-      padding: 4px 10px;
+      padding: 4px 11px;
       border-radius: 20px;
       border: 0.5px solid transparent;
-      background: rgba(255,255,255,0.07);
-      color: rgba(255,255,255,0.8);
+      background: rgba(255, 255, 255, 0.07);
+      color: rgba(255, 255, 255, 0.8);
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 5px;
       transition: all 0.15s;
     }
-    .sim-pill:hover { background: rgba(255,255,255,0.14); }
-    .sim-pill.active       { background: rgba(100,140,255,0.7); color: white; border-color: rgba(150,180,255,0.5); }
-    .sim-pill.active.green { background: rgba(48,209,88,0.7);  border-color: rgba(100,230,120,0.5); }
-    .sim-pill.active.yellow{ background: rgba(255,200,10,0.7); border-color: rgba(255,220,80,0.5); color: rgba(0,0,0,0.85); }
-    .sim-pill.active.red   { background: rgba(255,69,58,0.75); border-color: rgba(255,120,110,0.5); }
+    .sim-pill:hover { background: rgba(255, 255, 255, 0.14); }
+    .sim-pill.active        { background: rgba(100, 140, 255, 0.7); color: white; border-color: rgba(150, 180, 255, 0.5); }
+    .sim-pill.active.green  { background: rgba(48, 209, 88, 0.7); border-color: rgba(100, 230, 120, 0.5); }
+    .sim-pill.active.yellow { background: rgba(255, 200, 10, 0.7); border-color: rgba(255, 220, 80, 0.5); color: rgba(0, 0, 0, 0.85); }
+    .sim-pill.active.red    { background: rgba(255, 69, 58, 0.75); border-color: rgba(255, 120, 110, 0.5); }
     .sim-pill-dot { width: 7px; height: 7px; border-radius: 50%; }
     .dot-green  { background: #30d158; }
     .dot-yellow { background: #ffd60a; }
@@ -934,112 +349,132 @@
       position: absolute;
       top: 38px;
       left: 14px;
-      background: rgba(10, 12, 22, 0.80);
+      background: rgba(10, 12, 22, 0.82);
       backdrop-filter: blur(30px) saturate(200%);
       -webkit-backdrop-filter: blur(30px) saturate(200%);
-      border: 0.5px solid rgba(255,255,255,0.14);
+      border: 0.5px solid rgba(255, 255, 255, 0.14);
       border-radius: 10px;
-      padding: 9px 13px;
+      padding: 10px 14px;
       font-size: 11.5px;
-      color: rgba(255,255,255,0.75);
+      color: rgba(255, 255, 255, 0.75);
       line-height: 1.55;
       max-width: 320px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
       z-index: 500;
     }
     .help-tooltip strong { color: white; }
-    body.retina-mode {
-      zoom: 1.85;
-    }
-    body.retina-2x {
-      zoom: 2.0;
-    }
-    /* ─── High-Visibility Demo Crosshair & Click Action ─── */
-    #demoCursor {
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: 9999999;
-      pointer-events: none;
-      transition: transform 0.42s cubic-bezier(0.2, 0.9, 0.3, 1);
-      will-change: transform;
+
+    /* Native macOS "About Limen" Window */
+    .macos-about-window {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 290px;
+      background: rgba(30, 32, 42, 0.88);
+      backdrop-filter: blur(50px) saturate(240%);
+      -webkit-backdrop-filter: blur(50px) saturate(240%);
+      border: 0.5px solid rgba(255, 255, 255, 0.22);
+      border-radius: 14px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+      z-index: 10002;
       display: none;
+      flex-direction: column;
+      overflow: hidden;
     }
-    .cursor-crosshair {
-      position: absolute;
-      top: -15px;
-      left: -15px;
-      width: 30px;
-      height: 30px;
-      transition: transform 0.12s ease-out;
-      will-change: transform;
+    .macos-about-window.visible { display: flex; }
+    .about-window-header {
+      height: 28px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
     }
-    .cursor-crosshair.is-clicked {
-      transform: scale(0.78);
+    .window-dots {
+      display: flex;
+      gap: 6px;
     }
-    .cursor-ripple {
-      position: absolute;
-      top: -28px;
-      left: -28px;
-      width: 56px;
-      height: 56px;
+    .window-dots div {
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
-      border: 3px solid #38bdf8;
-      background: radial-gradient(circle, rgba(56, 189, 248, 0.6) 0%, rgba(56, 189, 248, 0.15) 55%, transparent 75%);
-      box-shadow: 0 0 20px #38bdf8, 0 0 35px rgba(56, 189, 248, 0.7);
-      pointer-events: none;
-      opacity: 0;
-      transform: scale(0.2);
+      cursor: pointer;
     }
-    .cursor-ripple.active {
-      animation: ripple-pulse 0.45s cubic-bezier(0.1, 0.8, 0.25, 1) forwards;
+    .dot-close { background: #ff5f56; border: 0.5px solid #e0443e; }
+    .dot-minimize { background: #ffbd2e; border: 0.5px solid #dea123; }
+    .dot-maximize { background: #27c93f; border: 0.5px solid #1aab29; }
+    .about-window-body {
+      padding: 14px 20px 24px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
     }
-    @keyframes ripple-pulse {
-      0% {
-        opacity: 1;
-        transform: scale(0.25);
-      }
-      50% {
-        opacity: 0.95;
-        transform: scale(1.1);
-      }
-      100% {
-        opacity: 0;
-        transform: scale(1.7);
-      }
+    .about-app-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.45);
+    }
+    .about-title { font-size: 15px; font-weight: 700; color: white; margin-bottom: 2px; }
+    .about-version { font-size: 11px; color: rgba(255, 255, 255, 0.55); margin-bottom: 10px; }
+    .about-desc { font-size: 11.5px; color: rgba(255, 255, 255, 0.75); line-height: 1.45; margin-bottom: 14px; }
+    .about-copyright { font-size: 9.5px; color: rgba(255, 255, 255, 0.35); }
+
+    /* macOS Dock */
+    .macos-dock-container {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.16);
+      backdrop-filter: blur(50px) saturate(240%);
+      -webkit-backdrop-filter: blur(50px) saturate(240%);
+      border: 0.5px solid rgba(255, 255, 255, 0.28);
+      border-radius: 20px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+      z-index: 1000;
+    }
+    .dock-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.15s ease;
+    }
+    .dock-item:hover { transform: scale(1.15) translateY(-4px); }
+    .dock-icon { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
+    .dock-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.8);
+      position: absolute;
+      bottom: -4px;
+    }
+    .dock-separator {
+      width: 0.5px;
+      height: 38px;
+      background: rgba(255, 255, 255, 0.2);
+      margin: 0 2px;
     }
   </style>
 </head>
 <body>
 
-  <!-- High-Visibility Demo Crosshair & Click Action Indicator -->
-  <div id="demoCursor">
-    <div id="cursorCrosshair" class="cursor-crosshair">
-      <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
-        <filter id="chShadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="1.5" stdDeviation="2.5" flood-color="#000000" flood-opacity="0.85"/>
-        </filter>
-        <g filter="url(#chShadow)">
-          <!-- Outer precision ring -->
-          <circle cx="15" cy="15" r="9" stroke="#ffffff" stroke-width="1.8" fill="rgba(56, 189, 248, 0.3)"/>
-          <!-- Inner target dot -->
-          <circle cx="15" cy="15" r="2.4" fill="#ffffff"/>
-          <!-- 4 Crosshair ticks -->
-          <line x1="15" y1="1.5" x2="15" y2="6.5" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
-          <line x1="15" y1="23.5" x2="15" y2="28.5" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
-          <line x1="1.5" y1="15" x2="6.5" y2="15" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
-          <line x1="23.5" y1="15" x2="28.5" y2="15" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
-        </g>
-      </svg>
-    </div>
-    <div id="cursorRipple" class="cursor-ripple"></div>
-  </div>
-
   <div class="macos-desktop">
-    <!-- macOS Tahoe Aurora Ribbons -->
     <div class="tahoe-aurora"></div>
 
-    <!-- macOS Top Menu Bar - 100% Authentic macOS Sequoia / Sonoma -->
+    <!-- macOS Top Menu Bar -->
     <header class="macos-menubar">
       <div class="menubar-left">
         <div class="apple-logo-btn" title="Apple Menu">
@@ -1057,11 +492,11 @@
       </div>
 
       <div class="menubar-right">
-        <!-- 1. Limen Menu Bar Item (Positioned on left of system items per macOS architecture) -->
+        <!-- Limen Menu Bar Item with Status Dot -->
         <div class="limen-tray-item">
           <button
             id="limenTrayBtn"
-            class="menubar-btn limen-tray-btn"
+            class="menubar-btn limen-tray-btn is-active"
             title="Left-Click: Open Limen | Right-Click: Context Menu"
             onclick="toggleLimenPopover(event)"
             oncontextmenu="showContextMenu(event)"
@@ -1070,7 +505,6 @@
               <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round">
                 <polygon points="13.2,2.4 7.2,12 11.5,12 9.6,21.6 16.8,10.5 12.5,10.5" />
               </svg>
-              <!-- Dynamic status indicator dot on the menu bar icon (glanceable without opening popup) -->
               <span id="menubarStatusDot" class="menubar-status-dot active"></span>
             </div>
           </button>
@@ -1088,8 +522,8 @@
           </div>
         </div>
 
-        <!-- 2. Apple Battery Status Item (with 100% label and SF Symbol battery capsule) -->
-        <div class="menubar-btn battery-group" title="Battery: 100% (Power Source: Power Adapter)">
+        <!-- Battery Status -->
+        <div class="menubar-btn battery-group" title="Battery: 100%">
           <span class="battery-pct-label">100%</span>
           <svg viewBox="0 0 26 13" width="22" height="11" fill="none">
             <rect x="0.75" y="0.75" width="20.5" height="11.5" rx="3.5" stroke="currentColor" stroke-width="1.15" opacity="0.9"/>
@@ -1098,8 +532,8 @@
           </svg>
         </div>
 
-        <!-- 3. Apple Wi-Fi Item (SF Symbol 3-arc wave) -->
-        <div class="menubar-btn" title="Wi-Fi: Connected to Office-5G">
+        <!-- Wi-Fi -->
+        <div class="menubar-btn" title="Wi-Fi">
           <svg viewBox="0 0 17 13" width="15" height="12" fill="none" stroke="currentColor">
             <path d="M1.2 3.6 C5.5 -0.4 11.5 -0.4 15.8 3.6" stroke-width="1.35" stroke-linecap="round"/>
             <path d="M4 6.5 C6.7 4.2 10.3 4.2 13 6.5" stroke-width="1.35" stroke-linecap="round"/>
@@ -1108,7 +542,7 @@
           </svg>
         </div>
 
-        <!-- 4. Apple Spotlight Search (SF Symbol magnifyingglass) -->
+        <!-- Spotlight Search -->
         <div class="menubar-btn" title="Spotlight (⌘Space)">
           <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor">
             <circle cx="6.2" cy="6.2" r="4.6" stroke-width="1.35"/>
@@ -1116,7 +550,7 @@
           </svg>
         </div>
 
-        <!-- 5. Apple Control Center (SF Symbol switch.2 stacked toggles) -->
+        <!-- Control Center -->
         <div class="menubar-btn" title="Control Center">
           <svg viewBox="0 0 16 16" width="15" height="15" fill="none">
             <rect x="1" y="2.4" width="14" height="4.6" rx="2.3" stroke="currentColor" stroke-width="1.2"/>
@@ -1126,235 +560,19 @@
           </svg>
         </div>
 
-        <!-- 6. Apple Date & Time (Clock with Live Ticking) -->
+        <!-- Live Clock -->
         <div id="macosClock" class="menubar-btn menubar-clock" title="Open Notification Center">
           Sun Oct 25&nbsp;&nbsp;3:05 PM
         </div>
       </div>
     </header>
 
-    <!-- Limen Dropdown Popover Anchor (Simulates Tauri Positioner) -->
-    <div id="popoverAnchor" class="popover-anchor" style="display:none">
-      <div class="popover-container">
-
-        <!-- Popover Header -->
-        <header class="header">
-          <div class="header-brand">
-            <div class="brand-icon-pill">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="white" stroke="white" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round">
-                <polygon points="13.2,2.4 7.2,12 11.5,12 9.6,21.6 16.8,10.5 12.5,10.5" />
-              </svg>
-            </div>
-            <span class="header-title">Limen</span>
-          </div>
-
-          <div id="headerStatusBadge" class="status-badge">
-            <span id="headerStatusDot" class="status-dot active"></span>
-            <span id="headerStatusText">Connected</span>
-          </div>
-        </header>
-
-        <!-- Main Content Area (Dynamic based on simulated state) -->
-        <main id="popoverMain" class="content">
-
-          <!-- ACTIVE STATE CONTENT -->
-          <div id="viewActive" style="display: flex; flex-direction: column; gap: 10px;">
-            <!-- Active Profiles Card -->
-            <div class="active-profiles-card">
-              <div class="active-profiles-header">
-                <span id="activeProfilesCount">● Active Profiles (0)</span>
-                <span style="font-size: 9.5px; opacity: 0.8;">~/.aws/credentials</span>
-              </div>
-
-              <div id="activeProfilesList" style="display: flex; flex-direction: column; gap: 6px;">
-                <div id="noProfilesPlaceholder" style="font-size: 11px; color: var(--text-muted); font-style: italic; padding: 6px 2px;">
-                  No active profiles. Select an account &amp; role below to activate.
-                </div>
-              </div>
-            </div>
-
-            <!-- Search Toolbar -->
-            <div class="search-container">
-              <div class="search-input-wrapper">
-                <svg class="search-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-                <input
-                  id="accountSearchInput"
-                  class="search-box"
-                  type="text"
-                  placeholder="Search accounts by name or ID..."
-                  oninput="handleSearchAccounts(this.value)"
-                />
-              </div>
-              <button class="refresh-btn" onclick="simulateAccountRefresh(this)" title="Refresh accounts">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
-                </svg>
-              </button>
-            </div>
-
-            <!-- Accounts & Roles List -->
-            <div id="accountsContainer">
-              <!-- Account 1 -->
-              <div class="account-card" data-account="production 111122223333">
-                <div class="account-header" onclick="toggleAccountAccordion('acct1')">
-                  <div class="account-title">
-                    <svg id="chevron-acct1" class="chevron-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="9 18 15 12 9 6" />
-                    </svg>
-                    <span class="account-name-text">Production Infrastructure</span>
-                  </div>
-                  <button class="copy-id-btn" onclick="event.stopPropagation(); copyAccountId('111122223333', this)">
-                    ID: 111122223333
-                  </button>
-                </div>
-                <div id="roles-acct1" class="roles-container" style="display: none;">
-                  <div class="role-item">
-                    <div style="display: flex; align-items: center; gap: 6px; overflow: hidden;">
-                      <span style="font-weight: 500;">AdministratorAccess</span>
-                    </div>
-                    <button class="play-btn" onclick="activateMockProfile('default', 'Production Infrastructure', 'AdministratorAccess')">
-                      <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
-                    </button>
-                  </div>
-                  <div class="role-item">
-                    <div id="role-title-readonly" style="display: flex; align-items: center; gap: 6px; overflow: hidden;">
-                      <span style="font-weight: 500;">ReadOnlyAccess</span>
-                    </div>
-                    <button id="btn-readonly" class="play-btn" onclick="activateMockProfile('prod-ro', 'Production Infrastructure', 'ReadOnlyAccess')">
-                      <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Account 2 -->
-              <div class="account-card" data-account="staging 444455556666">
-                <div class="account-header" onclick="toggleAccountAccordion('acct2')">
-                  <div class="account-title">
-                    <svg id="chevron-acct2" class="chevron-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="9 18 15 12 9 6" />
-                    </svg>
-                    <span class="account-name-text">Staging & QA</span>
-                  </div>
-                  <button class="copy-id-btn" onclick="event.stopPropagation(); copyAccountId('444455556666', this)">
-                    ID: 444455556666
-                  </button>
-                </div>
-                <div id="roles-acct2" class="roles-container" style="display: none;">
-                  <div class="role-item">
-                    <div style="display: flex; align-items: center; gap: 6px; overflow: hidden;">
-                      <span style="font-weight: 500;">DeveloperAccess</span>
-                      <span style="font-size: 10px; font-family: monospace; color: var(--success); font-weight: 700;">[staging]</span>
-                    </div>
-                    <button class="play-btn active-stop-btn" onclick="deactivateMockProfile('staging')">
-                      <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2.5"/></svg>
-                    </button>
-                  </div>
-                  <div class="role-item">
-                    <div style="display: flex; align-items: center; gap: 6px; overflow: hidden;">
-                      <span style="font-weight: 500;">SecOpsAuditor</span>
-                      <button class="profile-badge-btn">[default]</button>
-                    </div>
-                    <button class="play-btn" onclick="activateMockProfile('default', 'Staging & QA', 'SecOpsAuditor')">
-                      <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- EXPIRED STATE CONTENT -->
-          <div id="viewExpired" class="card" style="display: none; text-align: center; padding: 24px 16px; flex-direction: column; gap: 12px;">
-            <div style="font-size: 14px; font-weight: 600; color: var(--warning);">
-              Session Expired
-            </div>
-            <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;">
-              Your AWS SSO session has expired. Please sign in again to refresh your credentials.
-            </div>
-            <button class="primary-btn" onclick="setSimState('active')">
-              Sign In Again
-            </button>
-            <div style="display: flex; gap: 8px; justify-content: center; margin-top: 4px;">
-              <button class="action-btn-mini" style="flex: 1; height: 28px; justify-content: center;" onclick="setSimState('logged_out')">
-                Edit SSO Details
-              </button>
-              <button class="action-btn-mini" style="flex: 1; height: 28px; justify-content: center; color: var(--text-muted);" onclick="handleMockQuit()">
-                Quit
-              </button>
-            </div>
-          </div>
-
-          <!-- REFRESHING / PENDING STATE CONTENT -->
-          <div id="viewRefreshing" class="card" style="display: none; text-align: center; padding: 32px 16px; flex-direction: column; align-items: center; gap: 12px;">
-            <svg class="refresh-btn is-spinning" style="border:none; width:28px; height:28px; background:none; color:#3b82f6;" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2.5">
-              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
-            </svg>
-            <div>
-              <div style="font-size: 13.5px; font-weight: 600; margin-bottom: 4px;">Refreshing Token...</div>
-              <div style="font-size: 11.5px; color: var(--text-muted);">
-                Exchanging refresh token for active AWS SSO session.
-              </div>
-            </div>
-          </div>
-
-          <!-- AWAITING APPROVAL STATE -->
-          <div id="viewApproval" class="card" style="display: none; text-align: center; padding: 20px; flex-direction: column;">
-            <div style="font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 10px;">
-              Confirm this code in your browser:
-            </div>
-            <div style="font-size: 24px; font-family: monospace; font-weight: 800; letter-spacing: 3px; color: #60a5fa; background: rgba(0,0,0,0.35); padding: 10px; border-radius: 8px; margin-bottom: 14px; border: 1px dashed rgba(59, 130, 246, 0.4);">
-              ABCD-1234
-            </div>
-            <button id="btn-approve" class="primary-btn" onclick="handleApproveLogin()">
-              Approve (Simulate Browser Approval)
-            </button>
-          </div>
-
-          <!-- LOGGED OUT STATE -->
-          <div id="viewLoggedOut" class="card" style="display: none; flex-direction: column; gap: 12px;">
-            <h3 style="font-size: 13px; font-weight: 600;">AWS IAM Identity Center</h3>
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-              <label style="font-size: 10.5px; color: var(--text-secondary);">SSO Start URL</label>
-              <input class="search-box" style="padding-left: 8px;" type="url" value="https://my-company.awsapps.com/start" />
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-              <label style="font-size: 10.5px; color: var(--text-secondary);">SSO Region</label>
-              <input class="search-box" style="padding-left: 8px;" type="text" value="us-east-1" readonly />
-            </div>
-            <button id="btn-signin" class="primary-btn" onclick="handleSignInSso()">
-              Sign In with AWS SSO
-            </button>
-          </div>
-
-        </main>
-
-        <!-- Popover Footer -->
-        <footer class="footer">
-          <div class="region-chip">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
-            </svg>
-            <span>us-east-1</span>
-          </div>
-
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <button class="btn-signout" onclick="setSimState('logged_out')">
-              Sign Out
-            </button>
-            <button class="action-btn-mini" style="color: var(--text-muted);" onclick="handleMockQuit()" title="Quit (⌘Q)">
-              Quit
-            </button>
-          </div>
-        </footer>
-
-      </div>
+    <!-- Limen Dropdown Popover Anchor (Mounts ACTUAL production App.svelte) -->
+    <div id="popoverAnchor" class="popover-anchor" style="display:block">
+      <div id="limen-svelte-root" class="limen-app-frame"></div>
     </div>
 
-    <!-- Native macOS "About Limen" Window (Opens via Tray Right-Click > About) -->
+    <!-- Native macOS "About Limen" Window -->
     <div id="aboutWindow" class="macos-about-window">
       <div class="about-window-header">
         <div class="window-dots">
@@ -1376,46 +594,43 @@
       </div>
     </div>
 
-    <!-- Interactive Simulation Switcher Bar (For testing on Windows) -->
+    <!-- Interactive Simulation Switcher Bar -->
     <div class="sim-controller">
       <span class="sim-label">Mock State:</span>
-      <button id="btnStateActive" class="sim-pill active green" onclick="setSimState('active')">
+      <button id="btn-active" class="sim-pill active green" onclick="setSimState('active')">
         <span class="sim-pill-dot dot-green"></span>
         Active (Green)
       </button>
-      <button id="btnStateRefreshing" class="sim-pill" onclick="setSimState('refreshing')">
+      <button id="btn-refreshing" class="sim-pill" onclick="setSimState('refreshing')">
         <span class="sim-pill-dot dot-yellow"></span>
         Refreshing (Yellow)
       </button>
-      <button id="btnStateExpired" class="sim-pill" onclick="setSimState('expired')">
+      <button id="btn-expired" class="sim-pill" onclick="setSimState('expired')">
         <span class="sim-pill-dot dot-red"></span>
         Expired (Red)
       </button>
-      <button id="btnStateApproval" class="sim-pill" onclick="setSimState('approval')">
+      <button id="btn-approval" class="sim-pill" onclick="setSimState('approval')">
         Approval Code
       </button>
-      <button id="btnStateLoggedOut" class="sim-pill" onclick="setSimState('logged_out')">
+      <button id="btn-logged_out" class="sim-pill" onclick="setSimState('logged_out')">
         Logged Out
-      </button>
-      <button class="sim-pill" onclick="showContextMenuAtButton(event)">
-        Right-Click Tray Menu Demo
       </button>
     </div>
 
     <!-- Helper Guide Box -->
     <div class="help-tooltip">
       <strong>🍎 macOS Mock Environment:</strong><br>
-      • <strong>Left-Click</strong> the white bolt icon in the menu bar to toggle popover.<br>
-      • <strong>Right-Click</strong> the bolt icon to test the native <strong>About</strong> & <strong>Quit</strong> menu.<br>
-      • Observe the small Teams-style status dot on the brand icon dynamically updating color!
+      • Rendering the <strong>actual production Svelte 5 application</strong> (`src/App.svelte`).<br>
+      • <strong>Left-Click</strong> the tray icon to toggle popover.<br>
+      • <strong>Right-Click</strong> tray icon for native About &amp; Quit menu.<br>
+      • Use the pills below to test states or interact directly inside the app.
     </div>
 
-    <!-- Authentic macOS Dock -->
+    <!-- macOS Dock -->
     <div class="macos-dock-container">
-      <!-- 1. Finder -->
       <div class="dock-item" title="Finder">
         <div class="dock-icon">
-          <svg viewBox="0 0 100 100" width="48" height="48">
+          <svg viewBox="0 0 100 100" width="44" height="44">
             <defs>
               <linearGradient id="finderBg" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stop-color="#2bb4fc"/>
@@ -1425,7 +640,6 @@
             <rect width="100" height="100" rx="22" fill="url(#finderBg)"/>
             <path d="M50 14 C30 14 18 24 18 50 C18 76 30 86 50 86 C70 86 82 76 82 50 C82 24 70 14 50 14 Z" fill="#b9e4fd" opacity="0.95"/>
             <path d="M50 14 L50 86 C68 86 78 76 78 50 C78 24 68 14 50 14 Z" fill="#69c3fa"/>
-            <!-- Finder Smile and Eyes -->
             <circle cx="36" cy="40" r="4.2" fill="#023166"/>
             <circle cx="64" cy="40" r="4.2" fill="#023166"/>
             <path d="M48 38 L48 54 L52 54 L52 38" fill="none" stroke="#023166" stroke-width="3" stroke-linecap="round"/>
@@ -1435,10 +649,9 @@
         <div class="dock-dot"></div>
       </div>
 
-      <!-- 2. Safari -->
       <div class="dock-item" title="Safari">
         <div class="dock-icon">
-          <svg viewBox="0 0 100 100" width="48" height="48">
+          <svg viewBox="0 0 100 100" width="44" height="44">
             <rect width="100" height="100" rx="22" fill="#f8fafc"/>
             <circle cx="50" cy="50" r="41" fill="#0284c7"/>
             <circle cx="50" cy="50" r="34" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="1.5 3.5"/>
@@ -1449,45 +662,9 @@
         </div>
       </div>
 
-      <!-- 3. Messages -->
-      <div class="dock-item" title="Messages">
+      <div class="dock-item" title="Limen (Active Application)" onclick="toggleLimenPopover(event)">
         <div class="dock-icon">
-          <svg viewBox="0 0 100 100" width="48" height="48">
-            <defs>
-              <linearGradient id="msgBg" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#34d399"/>
-                <stop offset="100%" stop-color="#059669"/>
-              </linearGradient>
-            </defs>
-            <rect width="100" height="100" rx="22" fill="url(#msgBg)"/>
-            <path d="M24 46 C24 32 36 24 50 24 C64 24 76 32 76 46 C76 58 65 67 52 67 C48 67 43 66 38 64 L26 69 L29 58 C26 54 24 50 24 46 Z" fill="#ffffff"/>
-          </svg>
-        </div>
-      </div>
-
-      <!-- 4. System Settings -->
-      <div class="dock-item" title="System Settings">
-        <div class="dock-icon">
-          <svg viewBox="0 0 100 100" width="48" height="48">
-            <defs>
-              <linearGradient id="gearBg" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#64748b"/>
-                <stop offset="100%" stop-color="#334155"/>
-              </linearGradient>
-            </defs>
-            <rect width="100" height="100" rx="22" fill="url(#gearBg)"/>
-            <circle cx="50" cy="50" r="28" fill="#cbd5e1"/>
-            <circle cx="50" cy="50" r="14" fill="#334155"/>
-            <circle cx="50" cy="50" r="8" fill="#64748b"/>
-            <path d="M50 16 L50 22 M50 78 L50 84 M16 50 L22 50 M78 50 L84 50 M26 26 L30 30 M70 70 L74 74 M26 74 L30 70 M70 30 L74 26" stroke="#cbd5e1" stroke-width="6.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-      </div>
-
-      <!-- 5. Limen (Active Application) -->
-      <div class="dock-item" title="Limen (AWS Credential Switcher)" onclick="toggleLimenPopover(event)">
-        <div class="dock-icon">
-          <svg viewBox="0 0 100 100" width="48" height="48">
+          <svg viewBox="0 0 100 100" width="44" height="44">
             <defs>
               <linearGradient id="limenDockBg" x1="0" y1="0" x2="1" y2="1">
                 <stop offset="0%" stop-color="#2563eb"/>
@@ -1504,10 +681,9 @@
 
       <div class="dock-separator"></div>
 
-      <!-- 6. Trash -->
       <div class="dock-item" title="Trash">
         <div class="dock-icon">
-          <svg viewBox="0 0 100 100" width="48" height="48">
+          <svg viewBox="0 0 100 100" width="44" height="44">
             <rect x="25" y="32" width="50" height="52" rx="7" fill="rgba(255,255,255,0.18)" stroke="rgba(255,255,255,0.5)" stroke-width="2"/>
             <line x1="38" y1="42" x2="38" y2="72" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"/>
             <line x1="50" y1="42" x2="50" y2="72" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"/>
@@ -1517,404 +693,9 @@
         </div>
       </div>
     </div>
-
   </div>
 
-  <script>
-    // State management
-    let currentState = 'active';
-
-    function setSimState(state) {
-      currentState = state;
-
-      // Update switcher buttons
-      document.querySelectorAll('.sim-controller .sim-pill').forEach(btn => btn.classList.remove('active', 'green', 'yellow', 'red'));
-      if (state === 'active') document.getElementById('btnStateActive').classList.add('active', 'green');
-      if (state === 'refreshing') document.getElementById('btnStateRefreshing').classList.add('active', 'yellow');
-      if (state === 'expired') document.getElementById('btnStateExpired').classList.add('active', 'red');
-      if (state === 'approval') document.getElementById('btnStateApproval').classList.add('active');
-      if (state === 'logged_out') document.getElementById('btnStateLoggedOut').classList.add('active');
-
-      // Elements
-      const headerBadgeDot = document.getElementById('headerStatusDot');
-      const headerBadgeText = document.getElementById('headerStatusText');
-
-      const viewActive = document.getElementById('viewActive');
-      const viewExpired = document.getElementById('viewExpired');
-      const viewRefreshing = document.getElementById('viewRefreshing');
-      const viewApproval = document.getElementById('viewApproval');
-      const viewLoggedOut = document.getElementById('viewLoggedOut');
-
-      // Hide all views
-      viewActive.style.display = 'none';
-      viewExpired.style.display = 'none';
-      viewRefreshing.style.display = 'none';
-      viewApproval.style.display = 'none';
-      viewLoggedOut.style.display = 'none';
-
-      // Reset classes
-      headerBadgeDot.className = 'status-dot';
-
-      const menubarDot = document.getElementById('menubarStatusDot');
-      if (menubarDot) {
-        menubarDot.className = 'menubar-status-dot';
-      }
-
-      if (state === 'active') {
-        if (menubarDot) menubarDot.classList.add('active');
-        headerBadgeDot.classList.add('active');
-        headerBadgeText.textContent = 'Connected';
-        viewActive.style.display = 'flex';
-      } else if (state === 'refreshing') {
-        if (menubarDot) menubarDot.classList.add('refreshing');
-        headerBadgeDot.classList.add('pending');
-        headerBadgeText.textContent = 'Refreshing';
-        viewRefreshing.style.display = 'flex';
-      } else if (state === 'expired') {
-        if (menubarDot) menubarDot.classList.add('expired');
-        headerBadgeDot.classList.add('error');
-        headerBadgeText.textContent = 'Expired';
-        viewExpired.style.display = 'flex';
-      } else if (state === 'approval') {
-        if (menubarDot) menubarDot.classList.add('refreshing');
-        headerBadgeDot.classList.add('pending');
-        headerBadgeText.textContent = 'AwaitingApproval';
-        viewApproval.style.display = 'flex';
-      } else if (state === 'logged_out') {
-        if (menubarDot) menubarDot.classList.add('expired');
-        headerBadgeDot.classList.add('error');
-        headerBadgeText.textContent = 'LoggedOut';
-        viewLoggedOut.style.display = 'flex';
-      }
-    }
-
-    function alignPopoverToTray() {
-      const popover = document.getElementById('popoverAnchor');
-      const btn = document.getElementById('limenTrayBtn');
-      if (popover && btn) {
-        const rect = btn.getBoundingClientRect();
-        const popoverWidth = popover.offsetWidth || 380;
-        const left = rect.left + rect.width / 2 - popoverWidth / 2;
-        const clampedLeft = Math.min(Math.max(10, left), window.innerWidth - popoverWidth - 10);
-        popover.style.left = `${Math.round(clampedLeft)}px`;
-        popover.style.right = 'auto';
-        popover.style.top = `${Math.round(rect.bottom + 4)}px`;
-      }
-    }
-    window.addEventListener('resize', alignPopoverToTray);
-    window.addEventListener('load', alignPopoverToTray);
-    document.addEventListener('DOMContentLoaded', alignPopoverToTray);
-    setTimeout(alignPopoverToTray, 10);
-    setTimeout(alignPopoverToTray, 100);
-
-    // Toggle Popover Visibility
-    function toggleLimenPopover(e) {
-      if (e) e.stopPropagation();
-      const popover = document.getElementById('popoverAnchor');
-      const btn = document.getElementById('limenTrayBtn');
-      const contextMenu = document.getElementById('trayContextMenu');
-      if (contextMenu) contextMenu.classList.remove('visible');
-
-      const isHidden = !popover.style.display || popover.style.display === 'none' || window.getComputedStyle(popover).display === 'none';
-      if (isHidden) {
-        popover.style.display = 'block';
-        if (btn) btn.classList.add('is-active');
-        alignPopoverToTray();
-      } else {
-        popover.style.display = 'none';
-        if (btn) btn.classList.remove('is-active');
-      }
-    }
-
-    // Right-Click Context Menu
-    function showContextMenu(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      document.getElementById('popoverAnchor').style.display = 'none';
-      document.getElementById('limenTrayBtn').classList.remove('is-active');
-      const menu = document.getElementById('trayContextMenu');
-      menu.classList.toggle('visible');
-    }
-
-    function showContextMenuAtButton(e) {
-      if (e) {
-        e.stopPropagation();
-        e.preventDefault();
-      }
-      document.getElementById('popoverAnchor').style.display = 'none';
-      document.getElementById('limenTrayBtn').classList.remove('is-active');
-      const menu = document.getElementById('trayContextMenu');
-      menu.classList.add('visible');
-    }
-
-    // About Window
-    function openAboutWindow(e) {
-      if (e) e.stopPropagation();
-      document.getElementById('trayContextMenu').classList.remove('visible');
-      document.getElementById('aboutWindow').classList.add('visible');
-    }
-
-    function closeAboutWindow() {
-      document.getElementById('aboutWindow').classList.remove('visible');
-    }
-
-    // Mock Quit
-    function handleMockQuit(e) {
-      if (e) e.stopPropagation();
-      document.getElementById('trayContextMenu').classList.remove('visible');
-      document.getElementById('popoverAnchor').style.display = 'none';
-      document.getElementById('limenTrayBtn').classList.remove('is-active');
-      alert('Mock Quit called (in macOS this exits application via app.exit(0))');
-    }
-
-    // Accordions
-    function toggleAccountAccordion(id) {
-      const roles = document.getElementById(`roles-${id}`);
-      const chevron = document.getElementById(`chevron-${id}`);
-      if (roles.style.display === 'none') {
-        roles.style.display = 'flex';
-        chevron.classList.add('is-expanded');
-      } else {
-        roles.style.display = 'none';
-        chevron.classList.remove('is-expanded');
-      }
-    }
-
-    // Search Accounts
-    function handleSearchAccounts(q) {
-      const query = q.toLowerCase().trim();
-      document.querySelectorAll('.account-card').forEach(card => {
-        const text = card.getAttribute('data-account') || '';
-        card.style.display = (!query || text.includes(query)) ? 'block' : 'none';
-      });
-    }
-
-    // Copy Feedback
-    function copyExportCmd(profile, btn) {
-      const orig = btn.innerHTML;
-      btn.innerHTML = '<span style="color:#10b981; font-weight:600;">✓</span>';
-      navigator.clipboard.writeText(`export AWS_PROFILE=${profile}`);
-      setTimeout(() => btn.innerHTML = orig, 1800);
-    }
-
-    function copyAccountId(id, btn) {
-      const orig = btn.innerText;
-      btn.innerText = '✓ Copied ID';
-      navigator.clipboard.writeText(id);
-      setTimeout(() => btn.innerText = orig, 1800);
-    }
-
-    function handleSignInSso() {
-      setSimState('approval');
-    }
-
-    function handleApproveLogin() {
-      setSimState('refreshing');
-      setTimeout(() => {
-        setSimState('active');
-      }, 1200);
-    }
-
-    function activateMockProfile(profileName, account, role) {
-      const placeholder = document.getElementById('noProfilesPlaceholder');
-      if (placeholder) placeholder.style.display = 'none';
-
-      const countEl = document.getElementById('activeProfilesCount');
-      if (countEl) countEl.textContent = '● Active Profiles (1)';
-
-      const list = document.getElementById('activeProfilesList');
-      if (list && !document.getElementById(`row-${profileName}`)) {
-        const row = document.createElement('div');
-        row.className = 'active-profile-row';
-        row.id = `row-${profileName}`;
-        row.innerHTML = `
-          <div style="overflow: hidden;">
-            <div class="profile-tag">[${profileName}]</div>
-            <div class="profile-role-subtext">${account} • ${role}</div>
-          </div>
-          <div class="profile-actions">
-            <button class="action-btn-mini" onclick="copyExportCmd('${profileName}', this)">export</button>
-            <button class="btn-remove-profile" onclick="deactivateMockProfile('${profileName}')">
-              <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2.5"/></svg>
-            </button>
-          </div>
-        `;
-        list.appendChild(row);
-      }
-
-      if (profileName === 'prod-ro') {
-        const btn = document.getElementById('btn-readonly');
-        if (btn) {
-          btn.className = 'play-btn active-stop-btn';
-          btn.innerHTML = '<svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2.5"/></svg>';
-          btn.setAttribute('onclick', "deactivateMockProfile('prod-ro')");
-        }
-        const titleEl = document.getElementById('role-title-readonly');
-        if (titleEl && !titleEl.querySelector('.role-badge')) {
-          const badge = document.createElement('span');
-          badge.className = 'role-badge';
-          badge.style = 'font-size: 10px; font-family: monospace; color: var(--success); font-weight: 700;';
-          badge.textContent = '[prod-ro]';
-          titleEl.appendChild(badge);
-        }
-      }
-    }
-
-    function deactivateMockProfile(profileName) {
-      const row = document.getElementById(`row-${profileName}`);
-      if (row) row.remove();
-      const list = document.getElementById('activeProfilesList');
-      if (list && list.querySelectorAll('.active-profile-row').length === 0) {
-        const placeholder = document.getElementById('noProfilesPlaceholder');
-        if (placeholder) placeholder.style.display = 'block';
-        const countEl = document.getElementById('activeProfilesCount');
-        if (countEl) countEl.textContent = '● Active Profiles (0)';
-      }
-      if (profileName === 'prod-ro') {
-        const btn = document.getElementById('btn-readonly');
-        if (btn) {
-          btn.className = 'play-btn';
-          btn.innerHTML = '<svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>';
-          btn.setAttribute('onclick', "activateMockProfile('prod-ro', 'Production Infrastructure', 'ReadOnlyAccess')");
-        }
-        const titleEl = document.getElementById('role-title-readonly');
-        const badge = titleEl?.querySelector('.role-badge');
-        if (badge) badge.remove();
-      }
-    }
-
-    function simulateAccountRefresh(btn) {
-      btn.classList.add('is-spinning');
-      setTimeout(() => btn.classList.remove('is-spinning'), 800);
-    }
-
-    // Close popups on click outside
-    document.addEventListener('click', (e) => {
-      const contextMenu = document.getElementById('trayContextMenu');
-      const popover = document.getElementById('popoverAnchor');
-      const btn = document.getElementById('limenTrayBtn');
-      if (contextMenu && !contextMenu.contains(e.target) && (!btn || !btn.contains(e.target)) && !e.target.closest('.sim-pill')) {
-        contextMenu.classList.remove('visible');
-      }
-      if (popover && !popover.contains(e.target) && (!btn || !btn.contains(e.target)) && !e.target.closest('.sim-controller') && !e.target.closest('.macos-dock-container') && !e.target.closest('.macos-about-window')) {
-        popover.style.display = 'none';
-        if (btn) btn.classList.remove('is-active');
-      }
-    });
-
-    // Real-time clock update
-    function updateClock() {
-      const now = new Date();
-      const options = { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' };
-      document.getElementById('macosClock').textContent = now.toLocaleDateString('en-US', options).replace(/,/g, '');
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
-
-    // Check retina mode for high-DPI recording
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('retina') === '2') {
-      document.body.classList.add('retina-2x');
-    } else if (urlParams.get('retina') === '1') {
-      document.body.classList.add('retina-mode');
-    }
-
-    // Default to logged_out state so tray click starts with SSO form
-    setSimState('logged_out');
-
-    // ─── Automated Demo Player (Exact User Flow) ───
-    function moveCursorTo(el, offsetX = 0, offsetY = 0) {
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const cursor = document.getElementById('demoCursor');
-      if (!cursor) return;
-      cursor.style.display = 'block';
-      const x = Math.round(rect.left + rect.width / 2 + offsetX);
-      const y = Math.round(rect.top + rect.height / 2 + offsetY);
-      cursor.style.transform = `translate(${x}px, ${y}px)`;
-    }
-
-    function triggerRipple() {
-      const crosshair = document.getElementById('cursorCrosshair');
-      const ripple = document.getElementById('cursorRipple');
-      if (crosshair) crosshair.classList.add('is-clicked');
-      if (ripple) {
-        ripple.classList.remove('active');
-        void ripple.offsetWidth;
-        ripple.classList.add('active');
-      }
-      setTimeout(() => {
-        if (crosshair) crosshair.classList.remove('is-clicked');
-      }, 180);
-    }
-
-    async function runAutodemo() {
-      const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-      const trayBtn = document.getElementById('limenTrayBtn');
-      const cursor = document.getElementById('demoCursor');
-      
-      // Step 0: Ensure starting state: logged out, popover closed
-      setSimState('logged_out');
-      const popover = document.getElementById('popoverAnchor');
-      popover.style.display = 'none';
-      trayBtn.classList.remove('is-active');
-      alignPopoverToTray();
-
-      await sleep(600);
-
-      // Step 1: Move cursor to tray icon and click
-      moveCursorTo(trayBtn);
-      await sleep(600);
-      triggerRipple();
-      toggleLimenPopover();
-      await sleep(400);
-
-      // Step 2: Show SSO details screen, move to "Sign In with AWS SSO"
-      await sleep(1000);
-      const signinBtn = document.getElementById('btn-signin');
-      moveCursorTo(signinBtn);
-      await sleep(600);
-      triggerRipple();
-      handleSignInSso();
-      await sleep(400);
-
-      // Step 3: Approval code screen (ABCD-1234)
-      await sleep(1200);
-      const approveBtn = document.getElementById('btn-approve');
-      moveCursorTo(approveBtn);
-      await sleep(600);
-      triggerRipple();
-      handleApproveLogin();
-
-      // Step 4: Refreshing (1.2s automatic) -> Active screen (0 profiles, collapsed accounts)
-      await sleep(1800);
-
-      // Step 5: Expand "Production Infrastructure"
-      const prodHeader = document.querySelector('.account-header');
-      moveCursorTo(prodHeader, -40, 0);
-      await sleep(700);
-      triggerRipple();
-      toggleAccountAccordion('acct1');
-      await sleep(700);
-
-      // Step 6: Activate ReadOnlyAccess
-      const readonlyBtn = document.getElementById('btn-readonly');
-      moveCursorTo(readonlyBtn);
-      await sleep(600);
-      triggerRipple();
-      activateMockProfile('prod-ro', 'Production Infrastructure', 'ReadOnlyAccess');
-
-      // Step 7: Move cursor aside and linger on final active state
-      await sleep(600);
-      cursor.style.transform = `translate(${Math.max(window.innerWidth - 60, 400)}px, 200px)`;
-      await sleep(2500);
-
-      window.__demoFinished = true;
-    }
-
-    if (urlParams.get('autodemo') === '1') {
-      window.addEventListener('load', () => setTimeout(runAutodemo, 400));
-    }
-  </script>
+  <!-- Real App Mounting Script -->
+  <script type="module" src="./mock_entry.ts"></script>
 </body>
 </html>
