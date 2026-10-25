@@ -34,7 +34,10 @@ pub enum TokenStatus {
     Expired,
 }
 
-pub fn render_tray_status_icon(base_icon: &tauri::image::Image<'_>, status: TokenStatus) -> tauri::image::Image<'static> {
+pub fn render_tray_status_icon(
+    base_icon: &tauri::image::Image<'_>,
+    status: TokenStatus,
+) -> tauri::image::Image<'static> {
     let width = base_icon.width();
     let height = base_icon.height();
     let mut rgba = base_icon.rgba().to_vec();
