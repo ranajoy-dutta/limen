@@ -10,11 +10,9 @@ if (!version || !sha256) {
 }
 
 const cleanVersion = version.replace(/^v/, '');
-
-if (cleanVersion.includes('-')) {
-  console.log(`Prerelease version detected (${cleanVersion}). Skipping Homebrew tap update.`);
-  process.exit(0);
-}
+const isPrerelease = cleanVersion.includes('-');
+const path = isPrerelease ? 'Casks/limen@beta.rb' : 'Casks/limen.rb';
+const caskName = isPrerelease ? 'limen@beta' : 'limen';
 
 if (!token) {
   console.warn('⚠️  HOMEBREW_TAP_TOKEN secret is not set. Skipping Homebrew tap update.');
@@ -23,7 +21,6 @@ if (!token) {
 }
 
 const repo = 'ranajoy-dutta/homebrew-tap';
-const path = 'Casks/limen.rb';
 
 function githubRequest(method, endpoint, body = null) {
   return new Promise((resolve, reject) => {
@@ -75,28 +72,46 @@ function githubRequest(method, endpoint, body = null) {
 }
 
 async function run() {
-  console.log(`Fetching current ${path} from ${repo}...`);
-  const fileData = await githubRequest('GET', `/repos/${repo}/contents/${path}`);
+  console.log(`Targeting ${path} in ${repo} (${isPrerelease ? 'Pre-release / Beta' : 'Stable'})...`);
 
-  const currentContent = Buffer.from(fileData.content, 'base64').toString('utf8');
+  let currentContent;
+  let fileSha;
+
+  try {
+    const fileData = await githubRequest('GET', `/repos/${repo}/contents/${path}`);
+    currentContent = Buffer.from(fileData.content, 'base64').toString('utf8');
+    fileSha = fileData.sha;
+  } catch (err) {
+    if (isPrerelease && err.message.includes('404')) {
+      console.log(`${path} does not exist yet. Initializing from Casks/limen.rb...`);
+      const baseFileData = await githubRequest('GET', `/repos/${repo}/contents/Casks/limen.rb`);
+      const baseContent = Buffer.from(baseFileData.content, 'base64').toString('utf8');
+      currentContent = baseContent
+        .replace(/cask "limen"/, 'cask "limen@beta"')
+        .replace(/name "Limen"/, 'name "Limen (Beta)"')
+        .replace(/desc "([^"]+)"/, 'desc "$1 (Pre-release)"');
+    } else {
+      throw err;
+    }
+  }
 
   const updatedContent = currentContent
     .replace(/version\s+"[^"]+"/, `version "${cleanVersion}"`)
     .replace(/sha256\s+"[^"]+"/, `sha256 "${sha256}"`);
 
-  if (updatedContent === currentContent) {
+  if (fileSha && updatedContent === currentContent) {
     console.log(`Cask is already up to date with version ${cleanVersion}.`);
     return;
   }
 
   console.log(`Updating ${path} to version ${cleanVersion} with sha256 ${sha256}...`);
   await githubRequest('PUT', `/repos/${repo}/contents/${path}`, {
-    message: `bump: limen cask to v${cleanVersion}`,
+    message: `bump: ${caskName} cask to v${cleanVersion}`,
     content: Buffer.from(updatedContent).toString('base64'),
-    sha: fileData.sha,
+    ...(fileSha ? { sha: fileSha } : {}),
   });
 
-  console.log(`✅ Successfully updated Homebrew tap to v${cleanVersion}!`);
+  console.log(`✅ Successfully updated Homebrew tap (${path}) to v${cleanVersion}!`);
 }
 
 run().catch((err) => {
