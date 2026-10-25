@@ -1,57 +1,45 @@
 # Limen
 
 [![CI](https://github.com/ranajoy-dutta/limen/actions/workflows/ci.yml/badge.svg)](https://github.com/ranajoy-dutta/limen/actions/workflows/ci.yml)
-[![macOS](https://img.shields.io/badge/Platform-macOS%2012%2B-blue?logo=apple&logoColor=white)](https://apple.com)
-[![Rust](https://img.shields.io/badge/Backend-Rust%202021-orange?logo=rust&logoColor=white)](https://www.rust-lang.org/)
-[![Tauri](https://img.shields.io/badge/Framework-Tauri%20v2-24C8D8?logo=tauri&logoColor=white)](https://v2.tauri.app/)
-[![Svelte](https://img.shields.io/badge/Frontend-Svelte%205-FF3E00?logo=svelte&logoColor=white)](https://svelte.dev/)
+[![macOS](https://img.shields.io/badge/Platform-macOS%2012%2B-blue?logo=apple&logoColor=white)](https://www.apple.com/macos/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-**Limen** is an ultra-lightweight, native macOS menu bar switcher for **AWS IAM Identity Center (formerly AWS SSO)**. It provides frictionless authentication, role discovery, and instantaneous credential delivery directly into your standard `~/.aws/credentials` file.
+<h2 align="center">AWS SSO. Simplified.</h2>
 
-Built with Rust and Svelte 5 on Tauri v2, Limen runs as a true macOS menu bar accessory (`LSUIElement`) with **zero Dock footprint** and a standalone distribution size under 8 MB.
+<p align="center">
+  Manage profiles and switch IAM roles without the friction.
+</p>
+
+<p align="center">
+  <img
+    src="docs/screenshots/limen-showcase.gif"
+    alt="Limen for macOS — connect to AWS SSO, browse accounts, and activate IAM roles"
+    width="800"
+  />
+</p>
+
+Limen is a lightweight, native macOS menu bar app for **AWS IAM Identity Center (formerly AWS SSO)**. Sign in, discover your accessible AWS accounts and roles, and activate temporary credentials directly into your standard `~/.aws/credentials` file.
+
+Once a role is activated, Limen handles credential delivery automatically. Your existing AWS CLI, SDKs, Terraform, and other compatible tools can use the credentials through the standard AWS configuration.
 
 ---
 
-## Key Features
+## Features
 
-- ⚡ **True Native Menu Bar App**: Lives entirely in the macOS menu bar status item. Never clutters the Dock or `Cmd + Tab` app switcher.
-- 🔐 **Native AWS IAM Identity Center Flow**: Initiates device authorization via AWS SSO-OIDC and handles verification in the browser with one-click code copying.
-- 🏢 **Multi-Account & Role Discovery**: Automatically enumerates all accessible AWS accounts and IAM roles for the active Identity Center directory.
-- 🔍 **Instant Search**: Fuzzy search across accounts, account IDs, and role names in real time.
-- 🔄 **Multiple Simultaneous Profiles**: Activate different roles into distinct profile names (e.g. `default`, `staging`, `prod`) simultaneously in `~/.aws/credentials`.
-- 📋 **One-Click Export**: Copy `export AWS_PROFILE=<name>` shell snippets straight from the menu bar to target any terminal session immediately.
-- ⏹️ **Independent Session Control**: Deactivate or stop individual profile sessions with a single click, or sign out entirely.
-- 🚀 **Sub-10MB Memory & Binary**: Standalone native binary compiled to Apple Silicon (`aarch64`) with minimal memory overhead and zero Electron bloat.
-- 🧪 **Offline Mock Mode**: Built-in mock authentication and account simulator for local UI testing and development without live AWS credentials.
-
----
-
-## Architecture Overview
-
-```mermaid
-graph TD
-    A[Menu Bar Icon / Tray] -->|Click| B[Limen Popover UI]
-    B -->|Svelte 5 + Vite| C[IPC Bridge / Tauri Core]
-    C -->|Rust Async Engine| D[Session Manager]
-    D -->|SSO-OIDC API| E[AWS IAM Identity Center]
-    D -->|GetRoleCredentials| F[AWS SSO Portal]
-    F -->|Temporary STS Tokens| D
-    D -->|Atomic Write| G["~/.aws/credentials"]
-    G -->|Read by| H[AWS CLI / SDKs / Terraform]
-```
-
-### Technology Stack
-- **Engine**: [Rust](https://www.rust-lang.org/) (2021 edition) + [Tauri v2](https://v2.tauri.app/)
-- **Frontend**: [Svelte 5](https://svelte.dev/) + [TypeScript](https://www.typescriptlang.org/) + [Vite](https://vitejs.dev/)
-- **Native macOS Layer**: Cocoa / AppKit bindings via Objective-C runtime (`objc`) for borderless WebKit backdrop and tray event handling.
-- **AWS Integration**: Official [AWS SDK for Rust](https://github.com/awslabs/aws-sdk-rust) (`aws-sdk-ssooidc`, `aws-sdk-sso`).
+- **Native macOS experience** — Access Limen directly from the menu bar.
+- **Seamless AWS SSO authentication** — Sign in through AWS IAM Identity Center using your organization's SSO Start URL and region.
+- **Multi-account role discovery** — Browse the AWS accounts and IAM roles available to you.
+- **Instant search** — Find accounts by name, account ID, or role name.
+- **Multiple active profiles** — Activate different roles under separate profile names, such as `default`, `staging`, and `prod`, simultaneously.
+- **Automatic credential delivery** — Limen retrieves temporary role credentials and writes them to `~/.aws/credentials`. No manual copying of credentials or tokens is required.
+- **Works with your AWS tools** — Use activated profiles with the AWS CLI, SDKs, Terraform, and other tools that support standard AWS credentials.
+- **Independent session control** — Manage individual active profiles and sign out when you're finished.
 
 ---
 
 ## Installation
 
-### Option 1: Homebrew (Recommended)
+### Homebrew (Recommended)
 
 Install via Homebrew:
 
@@ -59,41 +47,31 @@ Install via Homebrew:
 brew install --cask ranajoy-dutta/tap/limen
 ```
 
-Or tap explicitly first:
-```bash
-brew tap ranajoy-dutta/tap
-brew install --cask limen
-```
+To upgrade to a newer version:
 
-To update in the future:
 ```bash
 brew upgrade --cask limen
 ```
 
----
+### Download a release
 
-### Option 2: Direct Download (DMG)
+Download the latest installer from [GitHub Releases](https://github.com/ranajoy-dutta/limen/releases).
 
-Download the latest `.dmg` release from [GitHub Releases](https://github.com/ranajoy-dutta/limen/releases):
-1. Open `Limen_0.1.0_aarch64.dmg`.
-2. Drag **Limen.app** into your `/Applications` folder.
-3. Launch Limen from `/Applications` or Spotlight.
+**DMG installer**
 
+1. Open the downloaded `.dmg` file.
+2. Drag `Limen.app` into your `/Applications` folder.
+3. Launch Limen from Applications or Spotlight.
 > **Note on macOS Gatekeeper:**
-> If macOS displays *"Limen is damaged and can't be opened"*, this is Apple's standard prompt for unnotarized open-source binaries. Simply remove the quarantine attribute:
+> If macOS prevents opening the unsigned `.pkg` installer, right-click (or Control-click) the `.pkg` file and choose **Open**, approve via **System Settings > Privacy & Security > Open Anyway**, or remove the quarantine attribute:
 > ```bash
-> xattr -cr /Applications/Limen.app
+> xattr -d com.apple.quarantine Limen_0.1.0_aarch64.pkg
 > ```
+**PKG installer**
 
----
-
-### Option 3: PKG Installer (Double-Click Setup)
-
-Download `Limen_0.1.0_aarch64.pkg` from [GitHub Releases](https://github.com/ranajoy-dutta/limen/releases):
-
-1. Double-click the `.pkg` file.
-2. Follow the standard macOS installer prompts (*Continue* → *Install*).
-3. Limen will be automatically placed in `/Applications`.
+1. Open the downloaded `.pkg` file.
+2. Follow the installer prompts.
+3. Launch Limen from Applications or Spotlight.
 
 > **Note on macOS Gatekeeper:**
 > If macOS prevents opening the unsigned `.pkg` installer, right-click (or Control-click) the `.pkg` file and choose **Open**, approve via **System Settings > Privacy & Security > Open Anyway**, or remove the quarantine attribute:
@@ -103,88 +81,72 @@ Download `Limen_0.1.0_aarch64.pkg` from [GitHub Releases](https://github.com/ran
 
 ---
 
-## Usage
+## Getting Started
 
-1. **Sign In**:
-   - Enter your AWS IAM Identity Center **SSO Start URL** (e.g. `https://my-company.awsapps.com/start`) and **SSO Region** (e.g. `us-east-1`).
-   - Click **Sign In with AWS SSO**.
-   - Copy the displayed authorization code, click **Open Browser**, and authorize the session.
-2. **Activate Credentials**:
-   - Browse or search your AWS accounts.
-   - Expand an account and click the **Play (▶)** button next to the desired role.
-   - Limen fetches temporary STS credentials and writes them to `~/.aws/credentials`.
-3. **Use with CLI / Tools**:
-   - Click **export** next to any active profile to copy the shell command:
-     ```bash
-     export AWS_PROFILE=default
-     aws sts get-caller-identity
-     ```
-4. **Context Menu & Quit**:
-   - **Left-Click** menu bar icon: Toggles the Limen popover.
-   - **Right-Click** menu bar icon: Opens the native macOS context menu with **Quit Limen** (`⌘Q`).
-   - You can also click **Quit Limen** inside the popover footer.
+### 1. Sign in to AWS
 
----
+1. Open Limen from the macOS menu bar.
+2. Enter your organization's AWS IAM Identity Center **SSO Start URL** and **SSO Region**.
+3. Click **Sign In with AWS SSO**.
+4. Copy the displayed authorization code and click **Open Browser**.
+5. Complete authorization in your browser.
 
-## Development & Building from Source
+Once authorization is complete, Limen displays the AWS accounts and roles available to you.
 
-### Prerequisites
-- macOS 12+ (Apple Silicon or Intel)
-- [Rust](https://rustup.rs/) (1.78+)
-- [Node.js](https://nodejs.org/) (v18+) and `npm`
+### 2. Activate an IAM role
 
-### Local Setup
+1. Browse your AWS accounts or search by account name, account ID, or role.
+2. Expand an account to view its IAM roles.
+3. Click the activation button next to the role you want to use.
+4. Configure the profile name and region as needed.
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/your-org/limen.git
-   cd limen
-   ```
+Limen retrieves temporary AWS role credentials and automatically writes them to `~/.aws/credentials` under the configured profile. You do not need to copy access keys, tokens, or credentials manually.
 
-2. **Install frontend dependencies:**
-   ```bash
-   npm install
-   ```
+### 3. Use your credentials
 
-3. **Run in Development Mode (Live AWS SSO):**
-   ```bash
-   npm run tauri dev
-   ```
+Your activated profile is available to AWS-compatible tools through the standard credentials file.
 
-4. **Run in Offline Mock Mode:**
-   You can develop and test the entire UI flow without an AWS account using the built-in mock engine:
-   ```bash
-   LIMEN_MOCK_AUTH=1 npm run tauri dev
-   ```
+For example, to use a profile named `staging` with the AWS CLI:
 
-### Building the Production Bundle
-
-To build the self-contained macOS `.app` bundle and standalone `.dmg` installer:
 ```bash
-npm run build && npm run tauri build
+aws sts get-caller-identity --profile staging
 ```
 
-The output artifacts will be placed in:
-- App Bundle: `src-tauri/target/release/bundle/macos/Limen.app`
-- DMG Installer: `src-tauri/target/release/bundle/dmg/Limen_0.1.0_aarch64.dmg`
+Replace `staging` with the profile name you configured in Limen. For the `default` profile, the AWS CLI normally uses it automatically.
+
+The same credentials can be used by compatible AWS SDKs, Terraform, and other tools that support standard AWS profiles.
+
+### 4. Manage sessions
+
+- **Left-click** the menu bar icon to open or close the Limen popover.
+- **Right-click** the menu bar icon to access the native context menu.
+- **Deactivate** an individual profile when you no longer need that role session.
+- **Sign out** to end your active SSO session.
+- **Quit** Limen from the popover footer or context menu.
 
 ---
 
-## Security & Privacy Considerations
+## Security & Privacy
 
-- **Zero Third-Party Telemetry**: Limen collects no analytics, telemetry, or user data.
-- **Direct Delivery**: Credentials obtained from AWS SSO are written directly to your operating system's standard `~/.aws/credentials` file.
-- **In-Memory OIDC Tokens**: Client tokens and registration state are managed in-process using scoped Rust memory structures.
-- **Native Sandboxing**: Uses macOS WebKit sandbox without external network permissions outside of direct AWS endpoints.
+- **No third-party telemetry** — Limen does not collect analytics, telemetry, or user data.
+- **Temporary AWS credentials** — Credentials are obtained through AWS IAM Identity Center and written to the standard `~/.aws/credentials` file.
+- **Local credential storage** — Credentials are stored on your Mac and remain subject to local file permissions and their validity period.
+- **Direct AWS integration** — Authentication and role credentials are obtained through AWS services rather than a third-party authentication gateway.
+
+Treat your AWS credentials file as sensitive. Local processes and tools with permission to access valid credentials may be able to use them until they expire or are invalidated.
 
 ---
 
-## Contributing
+## Support & Contributions
 
-Contributions are welcome! Please review [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, development standards, and pull request workflow.
+Found a bug or have an idea for an improvement? [Open an issue](https://github.com/ranajoy-dutta/limen/issues).
+
+For security-related concerns, see [SECURITY.md](SECURITY.md).
+
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 
 ---
 
 ## License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+Limen is licensed under the [MIT License](LICENSE).

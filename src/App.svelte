@@ -472,9 +472,9 @@
           class="action-btn-mini"
           style="color: var(--text-muted);"
           onclick={handleQuit}
-          title="Quit Limen (⌘Q)"
+          title="Quit (⌘Q)"
         >
-          Quit Limen
+          Quit
         </button>
       </div>
 
@@ -501,9 +501,9 @@
             class="action-btn-mini"
             style="flex: 1; height: 30px; justify-content: center; color: var(--text-muted);"
             onclick={handleQuit}
-            title="Quit Limen (⌘Q)"
+            title="Quit (⌘Q)"
           >
-            Quit Limen
+            Quit
           </button>
         </div>
       </div>
@@ -860,7 +860,7 @@
             class="action-btn-mini"
             style="color: var(--text-muted);"
             onclick={handleQuit}
-            title="Quit Limen (⌘Q)"
+            title="Quit (⌘Q)"
           >
             Quit
           </button>
@@ -890,9 +890,9 @@
             class="action-btn-mini"
             style="flex: 1; height: 28px; justify-content: center; color: var(--text-muted);"
             onclick={handleQuit}
-            title="Quit Limen (⌘Q)"
+            title="Quit (⌘Q)"
           >
-            Quit Limen
+            Quit
           </button>
         </div>
       </div>

@@ -27,6 +27,72 @@ pub struct AppState {
     pub last_blur_time: Arc<Mutex<Option<Instant>>>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TokenStatus {
+    Active,
+    Refreshing,
+    Expired,
+}
+
+pub fn render_tray_status_icon(
+    base_icon: &tauri::image::Image<'_>,
+    status: TokenStatus,
+) -> tauri::image::Image<'static> {
+    let width = base_icon.width();
+    let height = base_icon.height();
+    let mut rgba = base_icon.rgba().to_vec();
+
+    let radius = (width as f32 * 0.16).max(3.0);
+    let border_thickness = (width as f32 * 0.05).max(1.0);
+    let center_x = width as f32 - radius - (width as f32 * 0.06);
+    let center_y = height as f32 - radius - (height as f32 * 0.06);
+
+    let (dot_r, dot_g, dot_b) = match status {
+        TokenStatus::Active => (16, 185, 129),     // #10b981
+        TokenStatus::Refreshing => (245, 158, 11), // #f59e0b
+        TokenStatus::Expired => (244, 63, 94),     // #f43f5e
+    };
+
+    let total_radius = radius + border_thickness;
+
+    for y in 0..height {
+        for x in 0..width {
+            let dx = x as f32 - center_x;
+            let dy = y as f32 - center_y;
+            let dist = (dx * dx + dy * dy).sqrt();
+
+            if dist <= radius {
+                let idx = ((y * width + x) * 4) as usize;
+                if idx + 3 < rgba.len() {
+                    rgba[idx] = dot_r;
+                    rgba[idx + 1] = dot_g;
+                    rgba[idx + 2] = dot_b;
+                    rgba[idx + 3] = 255;
+                }
+            } else if dist <= total_radius {
+                let idx = ((y * width + x) * 4) as usize;
+                if idx + 3 < rgba.len() {
+                    rgba[idx] = 22;
+                    rgba[idx + 1] = 26;
+                    rgba[idx + 2] = 36;
+                    rgba[idx + 3] = 255;
+                }
+            }
+        }
+    }
+
+    tauri::image::Image::new_owned(rgba, width, height)
+}
+
+pub fn update_tray_status(app_handle: &tauri::AppHandle, status: TokenStatus) {
+    if let Some(tray) = app_handle.tray_by_id("main-tray") {
+        if let Some(base_icon) = app_handle.default_window_icon() {
+            let icon = render_tray_status_icon(base_icon, status);
+            let _ = tray.set_icon(Some(icon));
+        }
+    }
+}
+
 async fn run_background_watchdog(app_handle: tauri::AppHandle) {
     let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(10));
     interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
@@ -93,6 +159,19 @@ async fn run_background_watchdog(app_handle: tauri::AppHandle) {
                 }
             }
         }
+
+        // 3. Update dynamic menu bar tray icon based on token validity
+        let status = if is_token_valid {
+            TokenStatus::Active
+        } else {
+            match last_emitted_state.as_ref() {
+                Some(SessionState::Refreshing)
+                | Some(SessionState::Registering)
+                | Some(SessionState::AwaitingApproval { .. }) => TokenStatus::Refreshing,
+                _ => TokenStatus::Expired,
+            }
+        };
+        update_tray_status(&app_handle, status);
     }
 }
 
@@ -320,13 +399,22 @@ pub fn run() {
             let tray_icon = app.default_window_icon().cloned().expect("Default icon missing");
             let app_handle = app.handle().clone();
 
-            let quit_item = tauri::menu::MenuItem::with_id(app, "quit", "Quit Limen", true, Some("CmdOrCtrl+Q"))?;
-            let tray_menu = tauri::menu::Menu::with_items(app, &[&quit_item])?;
+            let about_metadata = tauri::menu::AboutMetadata {
+                name: Some("Limen".into()),
+                version: Some(env!("CARGO_PKG_VERSION").into()),
+                authors: Some(vec!["Ranajoy Dutta".into()]),
+                comments: Some("Native macOS menu bar AWS credential switcher".into()),
+                ..Default::default()
+            };
+            let about_item = tauri::menu::PredefinedMenuItem::about(app, Some("About"), Some(about_metadata))?;
+            let separator = tauri::menu::PredefinedMenuItem::separator(app)?;
+            let quit_item = tauri::menu::MenuItem::with_id(app, "quit", "Quit", true, Some("CmdOrCtrl+Q"))?;
+            let tray_menu = tauri::menu::Menu::with_items(app, &[&about_item, &separator, &quit_item])?;
             let tray_menu_clone = tray_menu.clone();
 
-            let _tray = TrayIconBuilder::new()
+            let _tray = TrayIconBuilder::with_id("main-tray")
                 .icon(tray_icon)
-                .icon_as_template(true)
+                .icon_as_template(false)
                 .menu(&tray_menu)
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| {

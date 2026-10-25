@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Limen - macOS Mock Environment Preview</title>
+  <!-- Apple San Francisco & Inter Web Fonts for authentic macOS typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.cdnfonts.com/css/sf-pro-display" rel="stylesheet">
+  <style>
+    /* =============================================
+       macOS Tahoe — Liquid Glass Environment Shell
+       Mounts the ACTUAL production Svelte 5 application!
+    =============================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    :root {
+      --font-stack: 'SF Pro Text', 'SF Pro Display', 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      --glass-bg: rgba(255, 255, 255, 0.12);
+      --glass-bg-dark: rgba(0, 0, 0, 0.25);
+      --glass-border: rgba(255, 255, 255, 0.28);
+      --glass-border-dark: rgba(255, 255, 255, 0.14);
+      --glass-blur: blur(60px) saturate(280%);
+      --glass-blur-heavy: blur(80px) saturate(300%);
+      --success: #30d158;
+      --danger: #ff453a;
+      --warning: #ffd60a;
+    }
+
+    body {
+      font-family: var(--font-stack);
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #000;
+      position: relative;
+    }
+
+    /* ─── macOS Tahoe Wallpaper ─── */
+    .macos-desktop {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 15% 85%, rgba(255, 100, 50, 0.7) 0%, transparent 45%),
+        radial-gradient(ellipse at 85% 10%, rgba(80, 40, 200, 0.8) 0%, transparent 45%),
+        radial-gradient(ellipse at 60% 60%, rgba(230, 60, 160, 0.55) 0%, transparent 40%),
+        radial-gradient(ellipse at 30% 30%, rgba(30, 120, 255, 0.6) 0%, transparent 50%),
+        radial-gradient(ellipse at 75% 80%, rgba(20, 200, 180, 0.4) 0%, transparent 40%),
+        linear-gradient(145deg, #0d0620 0%, #1a0a40 30%, #0a1a50 60%, #1a0830 100%);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .tahoe-aurora {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .tahoe-aurora::before {
+      content: '';
+      position: absolute;
+      top: -30%;
+      left: -10%;
+      width: 80vw;
+      height: 80vh;
+      background: conic-gradient(from 200deg at 50% 50%,
+        rgba(120, 60, 255, 0.3),
+        rgba(255, 80, 150, 0.2),
+        rgba(30, 150, 255, 0.25),
+        rgba(80, 220, 200, 0.15),
+        rgba(120, 60, 255, 0.3)
+      );
+      filter: blur(80px);
+      border-radius: 50%;
+      animation: auroraRotate 28s linear infinite;
+    }
+
+    @keyframes auroraRotate {
+      0%   { transform: rotate(0deg) scale(1); }
+      50%  { transform: rotate(180deg) scale(1.08); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+
+    /* ─── macOS Top Menu Bar ─── */
+    .macos-menubar {
+      height: 28px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.18);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-bottom: 0.5px solid rgba(255, 255, 255, 0.28);
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      z-index: 9999;
+      color: rgba(255, 255, 255, 0.95);
+      font-size: 13px;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+
+    .menubar-left,
+    .menubar-right {
+      display: flex;
+      align-items: center;
+      height: 100%;
+    }
+
+    .apple-logo-btn {
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      height: 20px;
+      cursor: default;
+      border-radius: 4px;
+      transition: background 0.15s;
+    }
+    .apple-logo-btn:hover { background: rgba(255, 255, 255, 0.18); }
+
+    .menubar-item {
+      padding: 0 9px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      cursor: default;
+      border-radius: 4px;
+      transition: background 0.15s;
+      letter-spacing: -0.01em;
+    }
+    .menubar-item.active { font-weight: 600; }
+    .menubar-item:hover { background: rgba(255, 255, 255, 0.18); }
+
+    .menubar-btn {
+      height: 22px;
+      padding: 0 6px;
+      display: flex;
+      align-items: center;
+      cursor: default;
+      border-radius: 4px;
+      transition: background 0.15s;
+      color: rgba(255, 255, 255, 0.95);
+      font-size: 12px;
+      background: none;
+      border: none;
+    }
+    .menubar-btn:hover { background: rgba(255, 255, 255, 0.18); }
+
+    /* ─── Limen Tray Button & Dot ─── */
+    .limen-tray-item {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .limen-tray-btn {
+      padding: 0 8px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .limen-tray-btn.is-active,
+    .limen-tray-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .tray-icon-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 17px;
+      height: 17px;
+    }
+
+    .menubar-status-dot {
+      position: absolute;
+      bottom: -1px;
+      right: -2px;
+      width: 6.5px;
+      height: 6.5px;
+      border-radius: 50%;
+      border: 1px solid rgba(0, 0, 0, 0.6);
+      background: #888;
+      transition: background-color 0.25s, box-shadow 0.25s;
+    }
+    .menubar-status-dot.active {
+      background: var(--success);
+      box-shadow: 0 0 5px rgba(48, 209, 88, 0.7);
+    }
+    .menubar-status-dot.refreshing {
+      background: var(--warning);
+      box-shadow: 0 0 5px rgba(255, 214, 10, 0.7);
+      animation: pulse 1.2s infinite ease-in-out;
+    }
+    .menubar-status-dot.expired {
+      background: var(--danger);
+      box-shadow: 0 0 5px rgba(255, 69, 58, 0.6);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    /* Context menu */
+    .macos-context-menu {
+      position: absolute;
+      top: 26px;
+      left: 0;
+      min-width: 150px;
+      background: rgba(30, 30, 35, 0.92);
+      backdrop-filter: blur(40px) saturate(220%);
+      -webkit-backdrop-filter: blur(40px) saturate(220%);
+      border: 0.5px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55);
+      padding: 4px;
+      z-index: 10001;
+      display: none;
+    }
+    .macos-context-menu.visible { display: flex; flex-direction: column; }
+    .context-menu-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 10px;
+      font-size: 12.5px;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.92);
+      border-radius: 5px;
+      cursor: default;
+      background: none;
+      border: none;
+      width: 100%;
+      text-align: left;
+    }
+    .context-menu-item:hover {
+      background: #007aff;
+      color: white;
+    }
+    .context-menu-shortcut {
+      font-size: 11px;
+      opacity: 0.7;
+    }
+    .context-menu-separator {
+      height: 0.5px;
+      background: rgba(255, 255, 255, 0.15);
+      margin: 3px 6px;
+    }
+
+    .battery-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11.5px;
+    }
+    .battery-pct-label { font-weight: 500; }
+    .menubar-clock {
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      padding: 0 7px;
+    }
+
+    /* ─── Popover Anchor (Simulates Tauri Positioner) ─── */
+    .popover-anchor {
+      position: absolute;
+      top: 32px;
+      z-index: 1000;
+      filter: drop-shadow(0 24px 48px rgba(0, 0, 0, 0.75)) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
+      border-radius: 14px;
+    }
+
+    .limen-app-frame {
+      width: 380px;
+      height: 520px;
+      box-sizing: border-box;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    /* ─── Simulation Switcher Bar ─── */
+    .sim-controller {
+      position: absolute;
+      bottom: 84px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(18, 18, 28, 0.85);
+      backdrop-filter: blur(40px) saturate(220%);
+      -webkit-backdrop-filter: blur(40px) saturate(220%);
+      border: 0.5px solid rgba(255, 255, 255, 0.18);
+      border-radius: 40px;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+    }
+    .sim-label {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.45);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-right: 4px;
+    }
+    .sim-pill {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 11px;
+      border-radius: 20px;
+      border: 0.5px solid transparent;
+      background: rgba(255, 255, 255, 0.07);
+      color: rgba(255, 255, 255, 0.8);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s;
+    }
+    .sim-pill:hover { background: rgba(255, 255, 255, 0.14); }
+    .sim-pill.active        { background: rgba(100, 140, 255, 0.7); color: white; border-color: rgba(150, 180, 255, 0.5); }
+    .sim-pill.active.green  { background: rgba(48, 209, 88, 0.7); border-color: rgba(100, 230, 120, 0.5); }
+    .sim-pill.active.yellow { background: rgba(255, 200, 10, 0.7); border-color: rgba(255, 220, 80, 0.5); color: rgba(0, 0, 0, 0.85); }
+    .sim-pill.active.red    { background: rgba(255, 69, 58, 0.75); border-color: rgba(255, 120, 110, 0.5); }
+    .sim-pill-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .dot-green  { background: #30d158; }
+    .dot-yellow { background: #ffd60a; }
+    .dot-red    { background: #ff453a; }
+
+    /* Help tooltip */
+    .help-tooltip {
+      position: absolute;
+      top: 38px;
+      left: 14px;
+      background: rgba(10, 12, 22, 0.82);
+      backdrop-filter: blur(30px) saturate(200%);
+      -webkit-backdrop-filter: blur(30px) saturate(200%);
+      border: 0.5px solid rgba(255, 255, 255, 0.14);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 11.5px;
+      color: rgba(255, 255, 255, 0.75);
+      line-height: 1.55;
+      max-width: 320px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+      z-index: 500;
+    }
+    .help-tooltip strong { color: white; }
+
+    /* Native macOS "About Limen" Window */
+    .macos-about-window {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 290px;
+      background: rgba(30, 32, 42, 0.88);
+      backdrop-filter: blur(50px) saturate(240%);
+      -webkit-backdrop-filter: blur(50px) saturate(240%);
+      border: 0.5px solid rgba(255, 255, 255, 0.22);
+      border-radius: 14px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+      z-index: 10002;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .macos-about-window.visible { display: flex; }
+    .about-window-header {
+      height: 28px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+    }
+    .window-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .window-dots div {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .dot-close { background: #ff5f56; border: 0.5px solid #e0443e; }
+    .dot-minimize { background: #ffbd2e; border: 0.5px solid #dea123; }
+    .dot-maximize { background: #27c93f; border: 0.5px solid #1aab29; }
+    .about-window-body {
+      padding: 14px 20px 24px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .about-app-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.45);
+    }
+    .about-title { font-size: 15px; font-weight: 700; color: white; margin-bottom: 2px; }
+    .about-version { font-size: 11px; color: rgba(255, 255, 255, 0.55); margin-bottom: 10px; }
+    .about-desc { font-size: 11.5px; color: rgba(255, 255, 255, 0.75); line-height: 1.45; margin-bottom: 14px; }
+    .about-copyright { font-size: 9.5px; color: rgba(255, 255, 255, 0.35); }
+
+    /* macOS Dock */
+    .macos-dock-container {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.16);
+      backdrop-filter: blur(50px) saturate(240%);
+      -webkit-backdrop-filter: blur(50px) saturate(240%);
+      border: 0.5px solid rgba(255, 255, 255, 0.28);
+      border-radius: 20px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+      z-index: 1000;
+    }
+    .dock-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.15s ease;
+    }
+    .dock-item:hover { transform: scale(1.15) translateY(-4px); }
+    .dock-icon { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
+    .dock-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.8);
+      position: absolute;
+      bottom: -4px;
+    }
+    .dock-separator {
+      width: 0.5px;
+      height: 38px;
+      background: rgba(255, 255, 255, 0.2);
+      margin: 0 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="macos-desktop">
+    <div class="tahoe-aurora"></div>
+
+    <!-- macOS Top Menu Bar -->
+    <header class="macos-menubar">
+      <div class="menubar-left">
+        <div class="apple-logo-btn" title="Apple Menu">
+          <svg viewBox="0 0 170 170" width="13" height="15" fill="currentColor">
+            <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.7-3.07-7.66-7.85-11.88-14.34-6.3-9.69-11.16-20.73-14.58-33.12-3.42-12.39-5.13-24.08-5.13-35.08 0-14.13 3.51-26.04 10.53-35.73 7.02-9.69 16.03-14.65 27.03-14.88 4.7 0 9.9 1.25 15.61 3.75 5.71 2.5 9.53 3.81 11.46 3.93 1.58-.23 5.46-1.57 11.64-4.04 6.18-2.47 11.45-3.64 15.82-3.52 12.3.68 22.18 5.41 29.64 14.2-10.74 6.53-15.99 15.54-15.76 27.02.23 8.94 3.65 16.48 10.26 22.61 6.62 6.13 14.5 9.47 23.65 10.02-1.92 6.06-4.22 12.24-6.9 18.54zm-28.8-107.56c0-6.98 2.5-13.43 7.51-19.34 5.01-5.91 11.16-9.52 18.45-10.85.23 1.25.34 2.38.34 3.4 0 6.87-2.67 13.56-8.01 20.08-5.34 6.52-11.83 10.29-19.47 11.31-.23-1.59-.34-3.13-.34-4.6z"/>
+          </svg>
+        </div>
+        <span class="menubar-item active">Finder</span>
+        <span class="menubar-item">File</span>
+        <span class="menubar-item">Edit</span>
+        <span class="menubar-item">View</span>
+        <span class="menubar-item">Go</span>
+        <span class="menubar-item">Window</span>
+        <span class="menubar-item">Help</span>
+      </div>
+
+      <div class="menubar-right">
+        <!-- Limen Menu Bar Item with Status Dot -->
+        <div class="limen-tray-item">
+          <button
+            id="limenTrayBtn"
+            class="menubar-btn limen-tray-btn is-active"
+            title="Left-Click: Open Limen | Right-Click: Context Menu"
+            onclick="toggleLimenPopover(event)"
+            oncontextmenu="showContextMenu(event)"
+          >
+            <div class="tray-icon-wrapper">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round">
+                <polygon points="13.2,2.4 7.2,12 11.5,12 9.6,21.6 16.8,10.5 12.5,10.5" />
+              </svg>
+              <span id="menubarStatusDot" class="menubar-status-dot active"></span>
+            </div>
+          </button>
+
+          <!-- Right-Click Native macOS Context Menu -->
+          <div id="trayContextMenu" class="macos-context-menu">
+            <button class="context-menu-item" onclick="openAboutWindow(event)">
+              <span>About</span>
+            </button>
+            <div class="context-menu-separator"></div>
+            <button class="context-menu-item" onclick="handleMockQuit(event)">
+              <span>Quit</span>
+              <span class="context-menu-shortcut">⌘Q</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Battery Status -->
+        <div class="menubar-btn battery-group" title="Battery: 100%">
+          <span class="battery-pct-label">100%</span>
+          <svg viewBox="0 0 26 13" width="22" height="11" fill="none">
+            <rect x="0.75" y="0.75" width="20.5" height="11.5" rx="3.5" stroke="currentColor" stroke-width="1.15" opacity="0.9"/>
+            <path d="M22.8 4.5 C23.6 4.9 23.6 8.1 22.8 8.5" stroke="currentColor" stroke-width="1.15" stroke-linecap="round"/>
+            <rect x="2.5" y="2.5" width="17" height="8" rx="2" fill="currentColor"/>
+          </svg>
+        </div>
+
+        <!-- Wi-Fi -->
+        <div class="menubar-btn" title="Wi-Fi">
+          <svg viewBox="0 0 17 13" width="15" height="12" fill="none" stroke="currentColor">
+            <path d="M1.2 3.6 C5.5 -0.4 11.5 -0.4 15.8 3.6" stroke-width="1.35" stroke-linecap="round"/>
+            <path d="M4 6.5 C6.7 4.2 10.3 4.2 13 6.5" stroke-width="1.35" stroke-linecap="round"/>
+            <path d="M6.8 9.3 C7.8 8.4 9.2 8.4 10.2 9.3" stroke-width="1.35" stroke-linecap="round"/>
+            <circle cx="8.5" cy="11.8" r="1.1" fill="currentColor" stroke="none"/>
+          </svg>
+        </div>
+
+        <!-- Spotlight Search -->
+        <div class="menubar-btn" title="Spotlight (⌘Space)">
+          <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor">
+            <circle cx="6.2" cy="6.2" r="4.6" stroke-width="1.35"/>
+            <line x1="9.6" y1="9.6" x2="14.2" y2="14.2" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <!-- Control Center -->
+        <div class="menubar-btn" title="Control Center">
+          <svg viewBox="0 0 16 16" width="15" height="15" fill="none">
+            <rect x="1" y="2.4" width="14" height="4.6" rx="2.3" stroke="currentColor" stroke-width="1.2"/>
+            <circle cx="3.6" cy="4.7" r="1.4" fill="currentColor"/>
+            <rect x="1" y="9" width="14" height="4.6" rx="2.3" stroke="currentColor" stroke-width="1.2"/>
+            <circle cx="12.4" cy="11.3" r="1.4" fill="currentColor"/>
+          </svg>
+        </div>
+
+        <!-- Live Clock -->
+        <div id="macosClock" class="menubar-btn menubar-clock" title="Open Notification Center">
+          Sun Oct 25&nbsp;&nbsp;3:05 PM
+        </div>
+      </div>
+    </header>
+
+    <!-- Limen Dropdown Popover Anchor (Mounts ACTUAL production App.svelte) -->
+    <div id="popoverAnchor" class="popover-anchor" style="display:block">
+      <div id="limen-svelte-root" class="limen-app-frame"></div>
+    </div>
+
+    <!-- Native macOS "About Limen" Window -->
+    <div id="aboutWindow" class="macos-about-window">
+      <div class="about-window-header">
+        <div class="window-dots">
+          <div class="dot-close" onclick="closeAboutWindow()"></div>
+          <div class="dot-minimize"></div>
+          <div class="dot-maximize"></div>
+        </div>
+      </div>
+      <div class="about-window-body">
+        <div class="about-app-icon">
+          <svg viewBox="0 0 24 24" width="34" height="34" fill="white" stroke="white" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round">
+            <polygon points="13.2,2.4 7.2,12 11.5,12 9.6,21.6 16.8,10.5 12.5,10.5" />
+          </svg>
+        </div>
+        <div class="about-title">Limen</div>
+        <div class="about-version">Version 0.3.0</div>
+        <div class="about-desc">Native macOS menu bar AWS credential switcher for AWS IAM Identity Center</div>
+        <div class="about-copyright">Copyright © 2026 Ranajoy Dutta. All rights reserved.</div>
+      </div>
+    </div>
+
+    <!-- Interactive Simulation Switcher Bar -->
+    <div class="sim-controller">
+      <span class="sim-label">Mock State:</span>
+      <button id="btn-active" class="sim-pill active green" onclick="setSimState('active')">
+        <span class="sim-pill-dot dot-green"></span>
+        Active (Green)
+      </button>
+      <button id="btn-refreshing" class="sim-pill" onclick="setSimState('refreshing')">
+        <span class="sim-pill-dot dot-yellow"></span>
+        Refreshing (Yellow)
+      </button>
+      <button id="btn-expired" class="sim-pill" onclick="setSimState('expired')">
+        <span class="sim-pill-dot dot-red"></span>
+        Expired (Red)
+      </button>
+      <button id="btn-approval" class="sim-pill" onclick="setSimState('approval')">
+        Approval Code
+      </button>
+      <button id="btn-logged_out" class="sim-pill" onclick="setSimState('logged_out')">
+        Logged Out
+      </button>
+    </div>
+
+    <!-- Helper Guide Box -->
+    <div class="help-tooltip">
+      <strong>🍎 macOS Mock Environment:</strong><br>
+      • Rendering the <strong>actual production Svelte 5 application</strong> (`src/App.svelte`).<br>
+      • <strong>Left-Click</strong> the tray icon to toggle popover.<br>
+      • <strong>Right-Click</strong> tray icon for native About &amp; Quit menu.<br>
+      • Use the pills below to test states or interact directly inside the app.
+    </div>
+
+    <!-- macOS Dock -->
+    <div class="macos-dock-container">
+      <div class="dock-item" title="Finder">
+        <div class="dock-icon">
+          <svg viewBox="0 0 100 100" width="44" height="44">
+            <defs>
+              <linearGradient id="finderBg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#2bb4fc"/>
+                <stop offset="100%" stop-color="#056bd8"/>
+              </linearGradient>
+            </defs>
+            <rect width="100" height="100" rx="22" fill="url(#finderBg)"/>
+            <path d="M50 14 C30 14 18 24 18 50 C18 76 30 86 50 86 C70 86 82 76 82 50 C82 24 70 14 50 14 Z" fill="#b9e4fd" opacity="0.95"/>
+            <path d="M50 14 L50 86 C68 86 78 76 78 50 C78 24 68 14 50 14 Z" fill="#69c3fa"/>
+            <circle cx="36" cy="40" r="4.2" fill="#023166"/>
+            <circle cx="64" cy="40" r="4.2" fill="#023166"/>
+            <path d="M48 38 L48 54 L52 54 L52 38" fill="none" stroke="#023166" stroke-width="3" stroke-linecap="round"/>
+            <path d="M34 61 C42 73 58 73 66 61" fill="none" stroke="#023166" stroke-width="3.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="dock-dot"></div>
+      </div>
+
+      <div class="dock-item" title="Safari">
+        <div class="dock-icon">
+          <svg viewBox="0 0 100 100" width="44" height="44">
+            <rect width="100" height="100" rx="22" fill="#f8fafc"/>
+            <circle cx="50" cy="50" r="41" fill="#0284c7"/>
+            <circle cx="50" cy="50" r="34" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="1.5 3.5"/>
+            <polygon points="50,16 57,50 43,50" fill="#ef4444"/>
+            <polygon points="50,84 57,50 43,50" fill="#f1f5f9"/>
+            <circle cx="50" cy="50" r="3.5" fill="#ffffff"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="dock-item" title="Limen (Active Application)" onclick="toggleLimenPopover(event)">
+        <div class="dock-icon">
+          <svg viewBox="0 0 100 100" width="44" height="44">
+            <defs>
+              <linearGradient id="limenDockBg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#2563eb"/>
+                <stop offset="50%" stop-color="#4f46e5"/>
+                <stop offset="100%" stop-color="#7c3aed"/>
+              </linearGradient>
+            </defs>
+            <rect width="100" height="100" rx="22" fill="url(#limenDockBg)"/>
+            <polygon points="56,12 32,50 48,50 40,88 68,44 52,44" fill="#ffffff" filter="drop-shadow(0 2px 6px rgba(0,0,0,0.3))"/>
+          </svg>
+        </div>
+        <div class="dock-dot"></div>
+      </div>
+
+      <div class="dock-separator"></div>
+
+      <div class="dock-item" title="Trash">
+        <div class="dock-icon">
+          <svg viewBox="0 0 100 100" width="44" height="44">
+            <rect x="25" y="32" width="50" height="52" rx="7" fill="rgba(255,255,255,0.18)" stroke="rgba(255,255,255,0.5)" stroke-width="2"/>
+            <line x1="38" y1="42" x2="38" y2="72" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"/>
+            <line x1="50" y1="42" x2="50" y2="72" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"/>
+            <line x1="62" y1="42" x2="62" y2="72" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M22 28 L78 28 M42 22 L58 22" stroke="rgba(255,255,255,0.7)" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Real App Mounting Script -->
+  <script type="module" src="./mock_entry.ts"></script>
+</body>
+</html>

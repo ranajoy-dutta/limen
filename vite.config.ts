@@ -8,6 +8,14 @@ export default defineConfig({
   // prevent vite from obscuring rust errors
   clearScreen: false,
   // tauri expects a fixed port, fail if that port is not available
+  build: {
+    rollupOptions: {
+      input: {
+        main: './index.html',
+        mock: './tests/index.html',
+      },
+    },
+  },
   server: {
     port: 1420,
     strictPort: true,
