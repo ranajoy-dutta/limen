@@ -9,13 +9,19 @@ if (!version || !sha256) {
   process.exit(1);
 }
 
+const cleanVersion = version.replace(/^v/, '');
+
+if (cleanVersion.includes('-')) {
+  console.log(`Prerelease version detected (${cleanVersion}). Skipping Homebrew tap update.`);
+  process.exit(0);
+}
+
 if (!token) {
   console.warn('⚠️  HOMEBREW_TAP_TOKEN secret is not set. Skipping Homebrew tap update.');
   console.warn('To enable auto-updates, add a GitHub PAT with repo scope as secret "HOMEBREW_TAP_TOKEN".');
   process.exit(0);
 }
 
-const cleanVersion = version.replace(/^v/, '');
 const repo = 'ranajoy-dutta/homebrew-tap';
 const path = 'Casks/limen.rb';
 
